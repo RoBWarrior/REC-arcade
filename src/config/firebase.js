@@ -25,3 +25,6 @@ if (typeof window !== 'undefined') {
 export const db = getFirestore(app);
 
 export default app;
+
+// Demo mode flag
+export const DEMO_MODE = import.meta.env.VITE_DEMO_MODE === 'true';
