@@ -9,9 +9,9 @@ const Login = ({ onLogin }) => {
   const [errors, setErrors] = useState({});
 
   // Demo mode - no validation required
-  const validateRegNumber = (regNumber) => {
-    return true; // Accept any registration number for demo
-  };
+  // const validateRegNumber = (regNumber) => {
+  //   return true; // Accept any registration number for demo
+  // };
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -112,11 +112,11 @@ const Login = ({ onLogin }) => {
           </button>
         </form>
 
-        <div className="mt-6 text-center">
+        {/* <div className="mt-6 text-center">
           <p className="text-gray-500 text-sm">
             Demo Mode: Enter any registration number
           </p>
-        </div>
+        </div> */}
       </div>
     </div>
   );
