@@ -97,7 +97,7 @@ const Login = ({ onLogin }) => {
               className={`w-full px-4 py-3 bg-gray-900 border rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 transition-all uppercase ${
                 errors.regNumber ? 'border-red-500 focus:ring-red-500' : 'border-gray-700 focus:ring-green-500'
               }`}
-              placeholder="Enter any registration number"
+              placeholder="Enter college registration number"
             />
             {errors.regNumber && (
               <p className="text-red-400 text-sm mt-1">{errors.regNumber}</p>
