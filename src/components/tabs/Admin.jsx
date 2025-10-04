@@ -63,7 +63,8 @@ const Admin = () => {
   };
 
   const handleAdminLogin = () => {
-    if (adminPassword === 'admin123') {
+    const adminPasswordFromEnv = import.meta.env.VITE_ADMIN_PASSWORD;
+    if (adminPassword === adminPasswordFromEnv) {
       setIsAdmin(true);
       setAdminPassword('');
     }
@@ -162,13 +163,6 @@ const Admin = () => {
             </button>
           </div>
           
-          <div className="mt-6 p-4 bg-gray-900 rounded-lg">
-            <div className="flex items-center gap-2 text-yellow-400 mb-2">
-              <AlertTriangle className="w-4 h-4" />
-              <span className="font-bold">Demo Password</span>
-            </div>
-            <p className="text-gray-400 text-sm">admin123</p>
-          </div>
         </div>
       </div>
     );

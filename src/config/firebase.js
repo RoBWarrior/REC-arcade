@@ -2,13 +2,13 @@ import { initializeApp } from 'firebase/app';
 import { getFirestore } from 'firebase/firestore';
 import { getAnalytics } from 'firebase/analytics';
 const firebaseConfig = {
-  apiKey: "AIzaSyCNCf0mCxVukICn9fB7Je61jtzY1ACVg7g",
-  authDomain: "rechase-b4b01.firebaseapp.com",
-  projectId: "rechase-b4b01",
-  storageBucket: "rechase-b4b01.firebasestorage.app",
-  messagingSenderId: "687718265383",
-  appId: "1:687718265383:web:ac7b154f1a878ac5195402",
-  measurementId: "G-7KLKDSYHTC"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
 };
 
 // Initialize Firebase
@@ -21,4 +21,4 @@ export const db = getFirestore(app);
 export default app;
 
 // Demo mode flag
-export const DEMO_MODE = true;
+export const DEMO_MODE = import.meta.env.VITE_DEMO_MODE === 'true';
