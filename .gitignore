@@ -36,4 +36,4 @@ next-env.d.ts
 
 
 # firebase
-/components/config/firebase.js
+/src/components/config/firebase.js
