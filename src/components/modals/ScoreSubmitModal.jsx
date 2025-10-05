@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
-import { X, Trophy, Check } from 'lucide-react';
+import { X, Trophy, Check, User } from 'lucide-react';
 import { addScore } from '../../services/firebaseService';
+import { updateUserGameStats } from '../../services/simpleAuthService';
 
 const ScoreSubmitModal = ({ score, game, user, onClose }) => {
   const [playerName, setPlayerName] = useState(user?.username || '');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [scoreUpdateInfo, setScoreUpdateInfo] = useState(null);
 
   const handleSubmit = async () => {
     if (!playerName.trim()) return;
@@ -13,7 +15,33 @@ const ScoreSubmitModal = ({ score, game, user, onClose }) => {
     setIsSubmitting(true);
     
     try {
-      await addScore(game, playerName.trim(), score);
+      // Submit score with the new update logic
+      const result = await addScore(
+        game, 
+        playerName.trim(), 
+        score, 
+        user?.id || null
+      );
+
+      // Store the result information for display
+      setScoreUpdateInfo(result);
+
+      // Update user game statistics if user is logged in
+      if (user?.id) {
+        const currentStats = user.gameStats || {};
+        const updatedStats = {
+          ...currentStats,
+          totalGamesPlayed: (currentStats.totalGamesPlayed || 0) + 1,
+          totalScore: (currentStats.totalScore || 0) + score,
+          [`best${game.charAt(0).toUpperCase() + game.slice(1)}Score`]: Math.max(
+            currentStats[`best${game.charAt(0).toUpperCase() + game.slice(1)}Score`] || 0,
+            score
+          )
+        };
+
+        await updateUserGameStats(user.id, updatedStats);
+      }
+
       setSubmitted(true);
       setTimeout(() => {
         onClose();
@@ -34,14 +62,39 @@ const ScoreSubmitModal = ({ score, game, user, onClose }) => {
   };
 
   if (submitted) {
+    const getSuccessMessage = () => {
+      if (!scoreUpdateInfo) return { title: 'Score Submitted!', message: 'Your score has been recorded.' };
+      
+      if (scoreUpdateInfo.updated) {
+        return {
+          title: 'New High Score!',
+          message: `Great improvement! Your score was updated from ${scoreUpdateInfo.previousScore} to ${score}.`
+        };
+      } else if (scoreUpdateInfo.updated === false && scoreUpdateInfo.currentScore) {
+        return {
+          title: 'Score Not Updated',
+          message: `Your current high score of ${scoreUpdateInfo.currentScore} is still better than this attempt.`
+        };
+      } else if (scoreUpdateInfo.newRecord) {
+        return {
+          title: 'Score Submitted!',
+          message: 'Your first score for this game has been recorded!'
+        };
+      }
+      
+      return { title: 'Score Submitted!', message: 'Your score has been recorded.' };
+    };
+
+    const { title, message } = getSuccessMessage();
+
     return (
       <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
         <div className="bg-gray-900 p-8 rounded-xl border-2 border-green-500 max-w-md w-full mx-4">
           <div className="text-center">
             <Check className="w-16 h-16 text-green-400 mx-auto mb-4" />
-            <h3 className="text-2xl font-bold mb-4 text-green-400">Score Submitted!</h3>
+            <h3 className="text-2xl font-bold mb-4 text-green-400">{title}</h3>
             <p className="text-white mb-2">Great job, {playerName}!</p>
-            <p className="text-gray-400">Your score has been recorded.</p>
+            <p className="text-gray-400">{message}</p>
           </div>
         </div>
       </div>

@@ -4,7 +4,7 @@ import Footer from './components/layout/Footer';
 import Login from './components/auth/Login';
 import Home from './components/tabs/Home';
 import Games from './components/tabs/Games';
-import Leaderboard from './components/tabs/Leaderboard';
+import Leaderboard from './components/tabs/LeaderboardNew';
 import Events from './components/tabs/Events';
 import Profile from './components/tabs/Profile';
 import Admin from './components/tabs/Admin';
@@ -15,20 +15,26 @@ function App() {
 
   // Check if user is already logged in (from localStorage)
   useEffect(() => {
-    const savedUser = localStorage.getItem('teamAavishkarUser');
+    const savedUser = localStorage.getItem('recArcadeUser');
     if (savedUser) {
-      setUser(JSON.parse(savedUser));
+      try {
+        const userData = JSON.parse(savedUser);
+        setUser(userData);
+      } catch (error) {
+        console.error('Error parsing saved user data:', error);
+        localStorage.removeItem('recArcadeUser');
+      }
     }
   }, []);
 
   const handleLogin = (userData) => {
     setUser(userData);
-    localStorage.setItem('teamAavishkarUser', JSON.stringify(userData));
+    localStorage.setItem('recArcadeUser', JSON.stringify(userData));
   };
 
   const handleLogout = () => {
     setUser(null);
-    localStorage.removeItem('teamAavishkarUser');
+    localStorage.removeItem('recArcadeUser');
     setActiveTab('home');
   };
 
@@ -44,7 +50,7 @@ function App() {
       case 'games':
         return <Games user={user} />;
       case 'leaderboard':
-        return <Leaderboard />;
+        return <Leaderboard user={user} />;
       case 'events':
         return <Events />;
       case 'profile':

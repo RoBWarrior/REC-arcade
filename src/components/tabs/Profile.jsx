@@ -9,9 +9,10 @@ import {
   Star,
   Zap,
   Crown,
-  Medal
+  Medal,
+  Users
 } from 'lucide-react';
-import { getScores } from '../../services/firebaseService';
+import { getUserScores } from '../../services/firebaseService';
 
 const Profile = ({ user }) => {
   const [userScores, setUserScores] = useState([]);
@@ -31,44 +32,48 @@ const Profile = ({ user }) => {
   const loadUserStats = async () => {
     setLoading(true);
     try {
-      // Get all scores and filter by user
-      const [snakeScores, reactionScores] = await Promise.all([
-        getScores('snake'),
-        getScores('reaction')
-      ]);
+      if (user?.id) {
+        // Get user's scores
+        const userScoresData = await getUserScores(user.id);
+        setUserScores(userScoresData);
 
-      const allScores = [...snakeScores, ...reactionScores];
-      const userScoresData = allScores.filter(score => 
-        score.name.toLowerCase() === user.username.toLowerCase()
-      );
+        // Calculate stats from user's actual game stats or scores
+        const gameStats = user.gameStats || {};
+        const snakeScoresForUser = userScoresData.filter(s => s.game === 'snake');
+        const reactionScoresForUser = userScoresData.filter(s => s.game === 'reaction');
 
-      setUserScores(userScoresData);
+        const bestSnake = gameStats.bestSnakeScore || 
+          (snakeScoresForUser.length > 0 ? Math.max(...snakeScoresForUser.map(s => s.score)) : 0);
+        const bestReaction = gameStats.bestReactionScore || 
+          (reactionScoresForUser.length > 0 ? Math.max(...reactionScoresForUser.map(s => s.score)) : 0);
 
-      // Calculate stats
-      const snakeScoresForUser = userScoresData.filter(s => s.game === 'snake');
-      const reactionScoresForUser = userScoresData.filter(s => s.game === 'reaction');
+        const totalGames = gameStats.totalGamesPlayed || userScoresData.length;
+        const averageScore = totalGames > 0 ? 
+          (gameStats.totalScore || userScoresData.reduce((sum, score) => sum + score.score, 0)) / totalGames : 0;
 
-      const bestSnake = snakeScoresForUser.length > 0 ? 
-        Math.max(...snakeScoresForUser.map(s => s.score)) : 0;
-      const bestReaction = reactionScoresForUser.length > 0 ? 
-        Math.max(...reactionScoresForUser.map(s => s.score)) : 0;
+        // Determine rank based on performance
+        let rank = 'Rookie';
+        if (totalGames >= 10 && averageScore > 2000) rank = 'Expert';
+        else if (totalGames >= 5 && averageScore > 1000) rank = 'Advanced';
+        else if (totalGames >= 2) rank = 'Intermediate';
 
-      const averageScore = userScoresData.length > 0 ? 
-        userScoresData.reduce((sum, score) => sum + score.score, 0) / userScoresData.length : 0;
-
-      // Determine rank based on performance
-      let rank = 'Rookie';
-      if (userScoresData.length >= 10) rank = 'Expert';
-      else if (userScoresData.length >= 5) rank = 'Advanced';
-      else if (userScoresData.length >= 2) rank = 'Intermediate';
-
-      setStats({
-        totalGames: userScoresData.length,
-        bestSnakeScore: bestSnake,
-        bestReactionScore: bestReaction,
-        averageScore: Math.round(averageScore),
-        rank
-      });
+        setStats({
+          totalGames,
+          bestSnakeScore: bestSnake,
+          bestReactionScore: bestReaction,
+          averageScore: Math.round(averageScore),
+          rank
+        });
+      } else {
+        // Fallback for demo mode or incomplete user data
+        setStats({
+          totalGames: 0,
+          bestSnakeScore: 0,
+          bestReactionScore: 0,
+          averageScore: 0,
+          rank: 'Rookie'
+        });
+      }
     } catch (error) {
       console.error('Error loading user stats:', error);
     } finally {
