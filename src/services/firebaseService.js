@@ -269,12 +269,14 @@ const OFFLINE_SCORES_COLLECTION = 'offlineScores';
 const EVENTS_COLLECTION = 'events';
 
 // Firebase functions
-export const addScore = async (game, name, score) => {
+export const addScore = async (game, name, score, userTrack = null, userId = null) => {
   try {
     await addDoc(collection(db, SCORES_COLLECTION), {
       game,
       name,
       score,
+      userTrack,
+      userId,
       timestamp: serverTimestamp()
     });
     return { success: true };
@@ -382,5 +384,78 @@ export const deleteEvent = async (id) => {
   } catch (error) {
     console.error('Error deleting event:', error);
     return { success: false, error };
+  }
+};
+
+// Track-based scoring functions
+export const getScoresByTrack = async (game, trackCode) => {
+  try {
+    const q = query(
+      collection(db, SCORES_COLLECTION),
+      where('game', '==', game),
+      where('userTrack', '==', trackCode),
+      orderBy('score', 'desc'),
+      limit(10)
+    );
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+  } catch (error) {
+    console.error('Error getting scores by track:', error);
+    return [];
+  }
+};
+
+export const getAllTracksLeaderboard = async (game) => {
+  try {
+    const q = query(
+      collection(db, SCORES_COLLECTION),
+      where('game', '==', game),
+      orderBy('score', 'desc'),
+      limit(50)
+    );
+    const querySnapshot = await getDocs(q);
+    const scores = querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+    
+    // Group by track
+    const trackLeaderboards = {};
+    scores.forEach(score => {
+      const track = score.userTrack || 'GENERAL';
+      if (!trackLeaderboards[track]) {
+        trackLeaderboards[track] = [];
+      }
+      if (trackLeaderboards[track].length < 10) {
+        trackLeaderboards[track].push(score);
+      }
+    });
+    
+    return trackLeaderboards;
+  } catch (error) {
+    console.error('Error getting all tracks leaderboard:', error);
+    return {};
+  }
+};
+
+export const getUserScoresByTrack = async (userId, trackCode) => {
+  try {
+    const q = query(
+      collection(db, SCORES_COLLECTION),
+      where('userId', '==', userId),
+      where('userTrack', '==', trackCode),
+      orderBy('timestamp', 'desc')
+    );
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+  } catch (error) {
+    console.error('Error getting user scores by track:', error);
+    return [];
   }
 };

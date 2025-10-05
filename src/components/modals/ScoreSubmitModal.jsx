@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { X, Trophy, Check } from 'lucide-react';
+import { X, Trophy, Check, User } from 'lucide-react';
 import { addScore } from '../../services/firebaseService';
+import { updateUserGameStats } from '../../services/simpleAuthService';
 
 const ScoreSubmitModal = ({ score, game, user, onClose }) => {
   const [playerName, setPlayerName] = useState(user?.username || '');
@@ -13,7 +14,31 @@ const ScoreSubmitModal = ({ score, game, user, onClose }) => {
     setIsSubmitting(true);
     
     try {
-      await addScore(game, playerName.trim(), score);
+      // Submit score with track information
+      await addScore(
+        game, 
+        playerName.trim(), 
+        score, 
+        user?.track || 'GENERAL',
+        user?.id || null
+      );
+
+      // Update user game statistics if user is logged in
+      if (user?.id) {
+        const currentStats = user.gameStats || {};
+        const updatedStats = {
+          ...currentStats,
+          totalGamesPlayed: (currentStats.totalGamesPlayed || 0) + 1,
+          totalScore: (currentStats.totalScore || 0) + score,
+          [`best${game.charAt(0).toUpperCase() + game.slice(1)}Score`]: Math.max(
+            currentStats[`best${game.charAt(0).toUpperCase() + game.slice(1)}Score`] || 0,
+            score
+          )
+        };
+
+        await updateUserGameStats(user.id, updatedStats);
+      }
+
       setSubmitted(true);
       setTimeout(() => {
         onClose();
@@ -68,6 +93,12 @@ const ScoreSubmitModal = ({ score, game, user, onClose }) => {
           <p className="text-3xl font-bold text-green-400 mb-2">{score}</p>
           <p className="text-white mb-1">Your Score</p>
           <p className="text-gray-400 text-sm capitalize">{game} Game</p>
+          {user?.track && (
+            <div className="mt-2 flex items-center gap-2">
+              <User className="w-4 h-4 text-blue-400" />
+              <p className="text-blue-400 text-sm">Track: {user.trackDisplayName || user.track}</p>
+            </div>
+          )}
         </div>
 
         <div className="mb-6">

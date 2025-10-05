@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { User, Lock } from 'lucide-react';
+import { User, Lock, AlertCircle } from 'lucide-react';
+import { authenticateUser, authenticateUserDemo } from '../../services/simpleAuthService';
 
 const Login = ({ onLogin }) => {
   const [formData, setFormData] = useState({
@@ -7,14 +8,15 @@ const Login = ({ onLogin }) => {
     regNumber: ''
   });
   const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(false);
 
-  // Demo mode - no validation required
-  // const validateRegNumber = (regNumber) => {
-  //   return true; // Accept any registration number for demo
-  // };
+  const DEMO_MODE = import.meta.env.VITE_DEMO_MODE === 'true';
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
+    setErrors({});
+
     const newErrors = {};
 
     if (!formData.username.trim()) {
@@ -25,13 +27,31 @@ const Login = ({ onLogin }) => {
       newErrors.regNumber = 'Registration number is required';
     }
 
-    if (Object.keys(newErrors).length === 0) {
-      onLogin({
-        username: formData.username.trim(),
-        regNumber: formData.regNumber.toUpperCase()
-      });
-    } else {
+    if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
+      setLoading(false);
+      return;
+    }
+
+    try {
+      let result;
+      
+      if (DEMO_MODE) {
+        result = authenticateUserDemo(formData.username, formData.regNumber);
+      } else {
+        result = await authenticateUser(formData.username, formData.regNumber);
+      }
+
+      if (result.success) {
+        onLogin(result.user);
+      } else {
+        setErrors({ general: result.error });
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      setErrors({ general: 'An unexpected error occurred. Please try again.' });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -97,26 +117,42 @@ const Login = ({ onLogin }) => {
               className={`w-full px-4 py-3 bg-gray-900 border rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 transition-all uppercase ${
                 errors.regNumber ? 'border-red-500 focus:ring-red-500' : 'border-gray-700 focus:ring-green-500'
               }`}
-              placeholder="Enter college registration number"
+              placeholder="Enter college registration number (e.g., 22U10999)"
+              disabled={loading}
             />
             {errors.regNumber && (
               <p className="text-red-400 text-sm mt-1">{errors.regNumber}</p>
             )}
+            <p className="text-gray-500 text-xs mt-1">
+              Format: 22U10999 (Year + Department + Roll Number)
+            </p>
           </div>
+
+          {errors.general && (
+            <div className="bg-red-900/50 border border-red-500 rounded-lg p-3 flex items-center">
+              <AlertCircle className="w-4 h-4 text-red-400 mr-2 flex-shrink-0" />
+              <p className="text-red-400 text-sm">{errors.general}</p>
+            </div>
+          )}
 
           <button
             type="submit"
-            className="w-full py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-black font-bold rounded-lg hover:from-green-400 hover:to-emerald-400 transition-all transform hover:scale-105"
+            disabled={loading}
+            className={`w-full py-3 font-bold rounded-lg transition-all transform ${
+              loading 
+                ? 'bg-gray-600 text-gray-300 cursor-not-allowed' 
+                : 'bg-gradient-to-r from-green-500 to-emerald-500 text-black hover:from-green-400 hover:to-emerald-400 hover:scale-105'
+            }`}
           >
-            LOGIN
+            {loading ? 'AUTHENTICATING...' : 'LOGIN'}
           </button>
         </form>
 
-        {/* <div className="mt-6 text-center">
+        <div className="mt-6 text-center">
           <p className="text-gray-500 text-sm">
-            Demo Mode: Enter any registration number
+            {DEMO_MODE ? 'Demo Mode: Any registration number works' : 'Track-based authentication system'}
           </p>
-        </div> */}
+        </div>
       </div>
     </div>
   );
