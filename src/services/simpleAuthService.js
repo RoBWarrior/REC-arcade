@@ -1,6 +1,6 @@
 /**
  * Simplified Authentication Service without Email Verification
- * Uses registration numbers as primary identification with track-based organization
+ * Uses registration numbers as primary identification
  */
 
 import {
@@ -15,12 +15,6 @@ import {
   serverTimestamp
 } from 'firebase/firestore';
 import { db } from '../config/firebase';
-import { 
-  extractTrackFromRegNumber, 
-  getOrCreateTrack, 
-  updateTrackStats,
-  getTrackDisplayName 
-} from './trackService';
 
 // Collections
 const USERS_COLLECTION = 'users';
@@ -61,12 +55,6 @@ export const authenticateUser = async (username, regNumber) => {
       throw new Error('Invalid registration number format. Expected format: 22U10999 or 22EE8999');
     }
     
-    // Extract track from registration number
-    const trackCode = extractTrackFromRegNumber(normalizedRegNumber);
-    
-    // Ensure track exists
-    await getOrCreateTrack(trackCode);
-    
     // Generate consistent user ID
     const userId = generateUserId(normalizedRegNumber);
     const userRef = doc(db, USERS_COLLECTION, userId);
@@ -90,8 +78,7 @@ export const authenticateUser = async (username, regNumber) => {
         user: {
           id: userId,
           ...userData,
-          ...updates,
-          trackDisplayName: getTrackDisplayName(trackCode)
+          ...updates
         },
         isNewUser: false
       };
@@ -101,8 +88,6 @@ export const authenticateUser = async (username, regNumber) => {
         id: userId,
         username: username.trim(),
         regNumber: normalizedRegNumber,
-        track: trackCode,
-        trackDisplayName: getTrackDisplayName(trackCode),
         isActive: true,
         isAdmin: false,
         createdAt: serverTimestamp(),
@@ -122,9 +107,6 @@ export const authenticateUser = async (username, regNumber) => {
       };
       
       await setDoc(userRef, newUserData);
-      
-      // Update track statistics
-      await updateTrackStats(trackCode);
       
       return {
         success: true,
@@ -276,14 +258,11 @@ if (DEMO_MODE) {
 export const authenticateUserDemo = (username, regNumber) => {
   try {
     const normalizedRegNumber = regNumber.toUpperCase().trim();
-    const trackCode = extractTrackFromRegNumber(normalizedRegNumber);
     
     const userData = {
       id: generateUserId(normalizedRegNumber),
       username: username.trim(),
       regNumber: normalizedRegNumber,
-      track: trackCode,
-      trackDisplayName: getTrackDisplayName(trackCode),
       isActive: true,
       isAdmin: false,
       gameStats: {

@@ -14,7 +14,7 @@ import {
   updateSystemSetting 
 } from './adminService';
 
-// Simplified Authentication Services (Track-based)
+// Simplified Authentication Services
 export {
   authenticateUser,
   authenticateUserDemo,
@@ -25,17 +25,6 @@ export {
   updateUserAdminStatus,
   checkRegNumberExists
 } from './simpleAuthService';
-
-// Track Management Services
-export {
-  extractTrackFromRegNumber,
-  getTrackDisplayName,
-  getOrCreateTrack,
-  getAllTracks,
-  getUsersByTrack,
-  getTrackLeaderboard,
-  updateTrackStats
-} from './trackService';
 
 // Authentication Services
 export {

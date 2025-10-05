@@ -7,6 +7,7 @@ const ScoreSubmitModal = ({ score, game, user, onClose }) => {
   const [playerName, setPlayerName] = useState(user?.username || '');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [scoreUpdateInfo, setScoreUpdateInfo] = useState(null);
 
   const handleSubmit = async () => {
     if (!playerName.trim()) return;
@@ -14,14 +15,16 @@ const ScoreSubmitModal = ({ score, game, user, onClose }) => {
     setIsSubmitting(true);
     
     try {
-      // Submit score with track information
-      await addScore(
+      // Submit score with the new update logic
+      const result = await addScore(
         game, 
         playerName.trim(), 
         score, 
-        user?.track || 'GENERAL',
         user?.id || null
       );
+
+      // Store the result information for display
+      setScoreUpdateInfo(result);
 
       // Update user game statistics if user is logged in
       if (user?.id) {
@@ -59,14 +62,39 @@ const ScoreSubmitModal = ({ score, game, user, onClose }) => {
   };
 
   if (submitted) {
+    const getSuccessMessage = () => {
+      if (!scoreUpdateInfo) return { title: 'Score Submitted!', message: 'Your score has been recorded.' };
+      
+      if (scoreUpdateInfo.updated) {
+        return {
+          title: 'New High Score!',
+          message: `Great improvement! Your score was updated from ${scoreUpdateInfo.previousScore} to ${score}.`
+        };
+      } else if (scoreUpdateInfo.updated === false && scoreUpdateInfo.currentScore) {
+        return {
+          title: 'Score Not Updated',
+          message: `Your current high score of ${scoreUpdateInfo.currentScore} is still better than this attempt.`
+        };
+      } else if (scoreUpdateInfo.newRecord) {
+        return {
+          title: 'Score Submitted!',
+          message: 'Your first score for this game has been recorded!'
+        };
+      }
+      
+      return { title: 'Score Submitted!', message: 'Your score has been recorded.' };
+    };
+
+    const { title, message } = getSuccessMessage();
+
     return (
       <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
         <div className="bg-gray-900 p-8 rounded-xl border-2 border-green-500 max-w-md w-full mx-4">
           <div className="text-center">
             <Check className="w-16 h-16 text-green-400 mx-auto mb-4" />
-            <h3 className="text-2xl font-bold mb-4 text-green-400">Score Submitted!</h3>
+            <h3 className="text-2xl font-bold mb-4 text-green-400">{title}</h3>
             <p className="text-white mb-2">Great job, {playerName}!</p>
-            <p className="text-gray-400">Your score has been recorded.</p>
+            <p className="text-gray-400">{message}</p>
           </div>
         </div>
       </div>
@@ -93,12 +121,6 @@ const ScoreSubmitModal = ({ score, game, user, onClose }) => {
           <p className="text-3xl font-bold text-green-400 mb-2">{score}</p>
           <p className="text-white mb-1">Your Score</p>
           <p className="text-gray-400 text-sm capitalize">{game} Game</p>
-          {user?.track && (
-            <div className="mt-2 flex items-center gap-2">
-              <User className="w-4 h-4 text-blue-400" />
-              <p className="text-blue-400 text-sm">Track: {user.trackDisplayName || user.track}</p>
-            </div>
-          )}
         </div>
 
         <div className="mb-6">

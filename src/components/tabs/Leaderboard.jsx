@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Trophy, Users, Medal, Crown, Award } from 'lucide-react';
-import { getScores, getOfflineScores } from '../../services/firebaseService';
+import { Trophy, Users, Medal, Crown, Award, AlertCircle, RefreshCw, Plus } from 'lucide-react';
+import { getScores, getOfflineScores, addScore } from '../../services/firebaseService';
 
 const Leaderboard = () => {
   const [activeTab, setActiveTab] = useState('online');
@@ -8,14 +8,27 @@ const Leaderboard = () => {
   const [onlineScores, setOnlineScores] = useState([]);
   const [offlineScores, setOfflineScores] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [debugInfo, setDebugInfo] = useState(null);
 
   const loadOnlineScores = async (game) => {
     setLoading(true);
+    setError(null);
+    setDebugInfo(null);
     try {
+      console.log('Loading scores for game:', game);
       const scores = await getScores(game);
+      console.log('Received scores:', scores);
       setOnlineScores(scores);
+      setDebugInfo({
+        game: game,
+        scoresCount: scores.length,
+        fetchedAt: new Date().toISOString()
+      });
     } catch (error) {
       console.error('Error loading scores:', error);
+      setError(`Failed to load scores: ${error.message}`);
+      setOnlineScores([]);
     } finally {
       setLoading(false);
     }
@@ -23,13 +36,39 @@ const Leaderboard = () => {
 
   const loadOfflineScores = async () => {
     setLoading(true);
+    setError(null);
     try {
+      console.log('Loading offline scores');
       const scores = await getOfflineScores();
+      console.log('Received offline scores:', scores);
       setOfflineScores(scores);
     } catch (error) {
       console.error('Error loading offline scores:', error);
+      setError(`Failed to load offline scores: ${error.message}`);
+      setOfflineScores([]);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const addTestScore = async () => {
+    try {
+      const testScores = [
+        { game: selectedGame, name: 'Test Player 1', score: Math.floor(Math.random() * 1000) + 100 },
+        { game: selectedGame, name: 'Test Player 2', score: Math.floor(Math.random() * 1000) + 100 },
+        { game: selectedGame, name: 'Test Player 3', score: Math.floor(Math.random() * 1000) + 100 }
+      ];
+
+      for (const testScore of testScores) {
+        const result = await addScore(testScore.game, testScore.name, testScore.score);
+        console.log('Added test score:', result);
+      }
+      
+      // Reload scores after adding test data
+      loadOnlineScores(selectedGame);
+    } catch (error) {
+      console.error('Error adding test scores:', error);
+      setError(`Failed to add test scores: ${error.message}`);
     }
   };
 
@@ -123,6 +162,26 @@ const Leaderboard = () => {
             </button>
           </div>
 
+          {/* Debug Controls */}
+          <div className="flex justify-center gap-4 mb-6">
+            <button
+              onClick={() => loadOnlineScores(selectedGame)}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all flex items-center gap-2"
+              disabled={loading}
+            >
+              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+              Refresh
+            </button>
+            <button
+              onClick={addTestScore}
+              className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-all flex items-center gap-2"
+              disabled={loading}
+            >
+              <Plus className="w-4 h-4" />
+              Add Test Data
+            </button>
+          </div>
+
           {/* Online Leaderboard */}
           <div className="max-w-4xl mx-auto">
             <div className="bg-gray-800 p-6 rounded-xl border border-green-500/30">
@@ -130,6 +189,21 @@ const Leaderboard = () => {
                 <Trophy className="text-yellow-400" />
                 {selectedGame === 'snake' ? 'Snake Game' : 'Reaction Tester'} Leaderboard
               </h3>
+              
+              {/* Debug Info */}
+              {debugInfo && (
+                <div className="mb-4 p-3 bg-gray-700 rounded-lg text-sm text-gray-300">
+                  <p>Game: {debugInfo.game} | Scores: {debugInfo.scoresCount} | Last Fetch: {new Date(debugInfo.fetchedAt).toLocaleTimeString()}</p>
+                </div>
+              )}
+              
+              {/* Error Display */}
+              {error && (
+                <div className="mb-4 p-4 bg-red-900/50 border border-red-500 rounded-lg flex items-center gap-2">
+                  <AlertCircle className="w-5 h-5 text-red-400" />
+                  <p className="text-red-300">{error}</p>
+                </div>
+              )}
               
               {loading ? (
                 <div className="flex justify-center py-8">
@@ -160,7 +234,7 @@ const Leaderboard = () => {
                     </div>
                   ))}
                   
-                  {onlineScores.length === 0 && !loading && (
+                  {onlineScores.length === 0 && !loading && !error && (
                     <div className="text-center py-12">
                       <Trophy className="w-16 h-16 text-gray-600 mx-auto mb-4" />
                       <p className="text-gray-400 text-lg">No scores yet</p>

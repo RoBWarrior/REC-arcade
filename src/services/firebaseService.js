@@ -12,7 +12,12 @@
 // } from 'firebase/firestore';
 // import { db, DEMO_MODE } from '../config/firebase';
 
-// // Demo data storage (in-memory for demo purposes)
+//// Collections
+const SCORES_COLLECTION = 'gameScores';
+const OFFLINE_SCORES_COLLECTION = 'offlineScores';
+const EVENTS_COLLECTION = 'events';
+
+// Demo data storage (in-memory for demo purposes)
 // let demoData = {
 //   scores: [
 //     { id: '1', game: 'snake', name: 'Alex Johnson', score: 150, timestamp: new Date('2024-01-15') },
@@ -259,46 +264,128 @@ import {
   getDocs,
   deleteDoc,
   doc,
+  updateDoc,
   serverTimestamp 
 } from 'firebase/firestore';
 import { db } from '../config/firebase';
 
-// Collections
-const SCORES_COLLECTION = 'scores';
-const OFFLINE_SCORES_COLLECTION = 'offlineScores';
-const EVENTS_COLLECTION = 'events';
-
 // Firebase functions
-export const addScore = async (game, name, score, userTrack = null, userId = null) => {
+export const addScore = async (game, name, score, userId = null) => {
   try {
-    await addDoc(collection(db, SCORES_COLLECTION), {
-      game,
+    // If userId is provided, check for existing score for this user and game
+    if (userId) {
+      try {
+        // Check for existing score in gameScores collection
+        const existingScoreQuery = query(
+          collection(db, SCORES_COLLECTION),
+          where('gameType', '==', game),
+          where('userId', '==', userId)
+        );
+        const existingScoreSnapshot = await getDocs(existingScoreQuery);
+        
+        if (!existingScoreSnapshot.empty) {
+          // Found existing score, update if new score is higher
+          const existingScoreDoc = existingScoreSnapshot.docs[0];
+          const existingScore = existingScoreDoc.data().score;
+          
+          if (score > existingScore) {
+            // Update with the new higher score
+            await updateDoc(doc(db, SCORES_COLLECTION, existingScoreDoc.id), {
+              score: score,
+              name: name, // Update name in case it changed
+              timestamp: serverTimestamp()
+            });
+            console.log('Score updated in gameScores collection with higher value');
+            return { success: true, updated: true, previousScore: existingScore };
+          } else {
+            // New score is not higher, don't update
+            console.log('New score is not higher than existing score, keeping existing');
+            return { success: true, updated: false, currentScore: existingScore };
+          }
+        }
+      } catch (queryError) {
+        console.warn('Error checking for existing score:', queryError);
+        // Continue to add new score if query fails
+      }
+    }
+
+    // No existing score found or no userId provided, add new score
+    const scoreData = {
+      gameType: game, // For gameScores collection
+      game: game, // For legacy scores collection
       name,
       score,
-      userTrack,
       userId,
+      isVerified: true,
       timestamp: serverTimestamp()
-    });
-    return { success: true };
+    };
+
+    // Try the main gameScores collection first
+    try {
+      await addDoc(collection(db, SCORES_COLLECTION), scoreData);
+      console.log('New score added to gameScores collection');
+      return { success: true, updated: false, newRecord: true };
+    } catch (gameScoresError) {
+      console.warn('Failed to add to gameScores, trying legacy scores collection:', gameScoresError);
+      
+      // Fallback to legacy scores collection
+      try {
+        await addDoc(collection(db, 'scores'), {
+          game,
+          name,
+          score,
+          userId,
+          timestamp: serverTimestamp()
+        });
+        console.log('New score added to legacy scores collection');
+        return { success: true, updated: false, newRecord: true };
+      } catch (legacyError) {
+        console.error('Failed to add to legacy scores as well:', legacyError);
+        throw legacyError;
+      }
+    }
   } catch (error) {
-    console.error('Error adding score:', error);
+    console.error('Error adding/updating score:', error);
     return { success: false, error };
   }
 };
 
 export const getScores = async (game) => {
   try {
-    const q = query(
+    // Try gameScores collection first with simple query
+    let q = query(
       collection(db, SCORES_COLLECTION),
-      where('game', '==', game),
-      orderBy('score', 'desc'),
-      limit(10)
+      where('gameType', '==', game)
     );
-    const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map(doc => ({
+    
+    let querySnapshot = await getDocs(q);
+    let scores = querySnapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data()
     }));
+
+    console.log(`Found ${scores.length} scores in gameScores collection`);
+
+    // If no scores found, try legacy scores collection
+    if (scores.length === 0) {
+      console.log('No scores in gameScores, trying legacy scores collection');
+      q = query(
+        collection(db, 'scores'),
+        where('game', '==', game)
+      );
+      querySnapshot = await getDocs(q);
+      scores = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      console.log(`Found ${scores.length} scores in legacy scores collection`);
+    }
+
+    // Sort by score in JavaScript instead of Firestore
+    scores.sort((a, b) => b.score - a.score);
+    
+    // Limit to top 10
+    return scores.slice(0, 10);
   } catch (error) {
     console.error('Error getting scores:', error);
     return [];
@@ -387,75 +474,24 @@ export const deleteEvent = async (id) => {
   }
 };
 
-// Track-based scoring functions
-export const getScoresByTrack = async (game, trackCode) => {
+// User scores function (without track filtering)
+export const getUserScores = async (userId) => {
   try {
+    // Use simple query to get all user scores
     const q = query(
       collection(db, SCORES_COLLECTION),
-      where('game', '==', game),
-      where('userTrack', '==', trackCode),
-      orderBy('score', 'desc'),
-      limit(10)
-    );
-    const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    }));
-  } catch (error) {
-    console.error('Error getting scores by track:', error);
-    return [];
-  }
-};
-
-export const getAllTracksLeaderboard = async (game) => {
-  try {
-    const q = query(
-      collection(db, SCORES_COLLECTION),
-      where('game', '==', game),
-      orderBy('score', 'desc'),
-      limit(50)
+      where('userId', '==', userId),
+      orderBy('timestamp', 'desc')
     );
     const querySnapshot = await getDocs(q);
     const scores = querySnapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data()
     }));
-    
-    // Group by track
-    const trackLeaderboards = {};
-    scores.forEach(score => {
-      const track = score.userTrack || 'GENERAL';
-      if (!trackLeaderboards[track]) {
-        trackLeaderboards[track] = [];
-      }
-      if (trackLeaderboards[track].length < 10) {
-        trackLeaderboards[track].push(score);
-      }
-    });
-    
-    return trackLeaderboards;
+      
+    return scores;
   } catch (error) {
-    console.error('Error getting all tracks leaderboard:', error);
-    return {};
-  }
-};
-
-export const getUserScoresByTrack = async (userId, trackCode) => {
-  try {
-    const q = query(
-      collection(db, SCORES_COLLECTION),
-      where('userId', '==', userId),
-      where('userTrack', '==', trackCode),
-      orderBy('timestamp', 'desc')
-    );
-    const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    }));
-  } catch (error) {
-    console.error('Error getting user scores by track:', error);
+    console.error('Error getting user scores:', error);
     return [];
   }
 };

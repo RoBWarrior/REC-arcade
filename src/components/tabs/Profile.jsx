@@ -12,8 +12,7 @@ import {
   Medal,
   Users
 } from 'lucide-react';
-import { getUserScoresByTrack } from '../../services/firebaseService';
-import { getTrackDisplayName } from '../../services/trackService';
+import { getUserScores } from '../../services/firebaseService';
 
 const Profile = ({ user }) => {
   const [userScores, setUserScores] = useState([]);
@@ -33,9 +32,9 @@ const Profile = ({ user }) => {
   const loadUserStats = async () => {
     setLoading(true);
     try {
-      if (user?.id && user?.track) {
-        // Get user's scores from their track
-        const userScoresData = await getUserScoresByTrack(user.id, user.track);
+      if (user?.id) {
+        // Get user's scores
+        const userScoresData = await getUserScores(user.id);
         setUserScores(userScoresData);
 
         // Calculate stats from user's actual game stats or scores
@@ -172,14 +171,6 @@ const Profile = ({ user }) => {
         </div>
         <h2 className="text-4xl font-bold mb-2">{user.username}</h2>
         <p className="text-gray-400 text-lg">{user.regNumber}</p>
-        {user.track && (
-          <div className="flex items-center justify-center gap-2 mt-2 mb-2">
-            <Users className="w-4 h-4 text-blue-400" />
-            <span className="text-blue-400 font-semibold">
-              {getTrackDisplayName(user.track)}
-            </span>
-          </div>
-        )}
         <div className="flex items-center justify-center gap-2 mt-4">
           {getRankIcon(stats.rank)}
           <span className={`bg-gradient-to-r ${getRankColor(stats.rank)} bg-clip-text text-transparent font-bold text-xl`}>
