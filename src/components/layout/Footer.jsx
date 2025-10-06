@@ -1,4 +1,5 @@
 import React from 'react';
+import recLogo from '../../assets/rec.png';
 import { Github, Mail, Users, Code } from 'lucide-react';
 
 const Footer = () => {
@@ -9,15 +10,20 @@ const Footer = () => {
           {/* Club Info */}
           <div className="col-span-1 md:col-span-2">
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-500 rounded-lg flex items-center justify-center">
-                <span className="text-xl font-bold text-black">TA</span>
+              <div className="w-16 h-16 rounded-xl flex items-center justify-center mx-auto mb-4 overflow-hidden">
+                <img
+                  src={recLogo}
+                  alt="RECursion Logo"
+                  className="w-full h-full object-cover"
+                />
               </div>
+
               <h3 className="text-xl font-bold" style={{ fontFamily: '"Courier New", monospace', letterSpacing: '1px' }}>
                 Team RECursion
               </h3>
             </div>
             <p className="text-gray-400 mb-4 leading-relaxed">
-              The premier coding club fostering innovation, creativity, and technical excellence. 
+              The premier coding club fostering innovation, creativity, and technical excellence.
               Join us in building the future through code.
             </p>
             <div className="flex gap-4">

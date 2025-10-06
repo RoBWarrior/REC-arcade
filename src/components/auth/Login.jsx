@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import recLogo from '../../assets/rec.png';
 import { User, Lock, AlertCircle } from 'lucide-react';
 import { authenticateUser, authenticateUserDemo } from '../../services/simpleAuthService';
 
@@ -35,7 +36,7 @@ const Login = ({ onLogin }) => {
 
     try {
       let result;
-      
+
       if (DEMO_MODE) {
         result = authenticateUserDemo(formData.username, formData.regNumber);
       } else {
@@ -45,6 +46,7 @@ const Login = ({ onLogin }) => {
       if (result.success) {
         onLogin(result.user);
       } else {
+        console.error('Authentication failed:', result.error);
         setErrors({ general: result.error });
       }
     } catch (error) {
@@ -74,9 +76,14 @@ const Login = ({ onLogin }) => {
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 flex items-center justify-center">
       <div className="bg-gray-800/50 backdrop-blur-md p-8 rounded-2xl border border-green-500/30 max-w-md w-full mx-4">
         <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-emerald-500 rounded-xl flex items-center justify-center mx-auto mb-4">
-            <span className="text-3xl font-bold text-black">TA</span>
+          <div className="w-16 h-16 rounded-xl flex items-center justify-center mx-auto mb-4 overflow-hidden">
+            <img
+              src={recLogo}
+              alt="RECursion Logo"
+              className="w-full h-full object-cover"
+            />
           </div>
+
           <h1 className="text-3xl font-bold text-white mb-2" style={{ fontFamily: '"Courier New", monospace', letterSpacing: '2px' }}>
             Team RECursion
           </h1>
@@ -94,9 +101,8 @@ const Login = ({ onLogin }) => {
               name="username"
               value={formData.username}
               onChange={handleInputChange}
-              className={`w-full px-4 py-3 bg-gray-900 border rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 transition-all ${
-                errors.username ? 'border-red-500 focus:ring-red-500' : 'border-gray-700 focus:ring-green-500'
-              }`}
+              className={`w-full px-4 py-3 bg-gray-900 border rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 transition-all ${errors.username ? 'border-red-500 focus:ring-red-500' : 'border-gray-700 focus:ring-green-500'
+                }`}
               placeholder="Enter your username"
             />
             {errors.username && (
@@ -114,9 +120,8 @@ const Login = ({ onLogin }) => {
               name="regNumber"
               value={formData.regNumber}
               onChange={handleInputChange}
-              className={`w-full px-4 py-3 bg-gray-900 border rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 transition-all uppercase ${
-                errors.regNumber ? 'border-red-500 focus:ring-red-500' : 'border-gray-700 focus:ring-green-500'
-              }`}
+              className={`w-full px-4 py-3 bg-gray-900 border rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 transition-all uppercase ${errors.regNumber ? 'border-red-500 focus:ring-red-500' : 'border-gray-700 focus:ring-green-500'
+                }`}
               placeholder="Enter college registration number (e.g., 22U10999)"
               disabled={loading}
             />
@@ -138,11 +143,10 @@ const Login = ({ onLogin }) => {
           <button
             type="submit"
             disabled={loading}
-            className={`w-full py-3 font-bold rounded-lg transition-all transform ${
-              loading 
-                ? 'bg-gray-600 text-gray-300 cursor-not-allowed' 
+            className={`w-full py-3 font-bold rounded-lg transition-all transform ${loading
+                ? 'bg-gray-600 text-gray-300 cursor-not-allowed'
                 : 'bg-gradient-to-r from-green-500 to-emerald-500 text-black hover:from-green-400 hover:to-emerald-400 hover:scale-105'
-            }`}
+              }`}
           >
             {loading ? 'AUTHENTICATING...' : 'LOGIN'}
           </button>
