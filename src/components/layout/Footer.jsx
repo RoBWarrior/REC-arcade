@@ -1,6 +1,6 @@
 import React from 'react';
 import recLogo from '../../assets/rec.png';
-import { Github, Mail, Users, Code } from 'lucide-react';
+import { Github, Mail, Users, Code, Facebook, Phone } from 'lucide-react';
 
 const Footer = () => {
   return (
@@ -23,15 +23,14 @@ const Footer = () => {
               </h3>
             </div>
             <p className="text-gray-400 mb-4 leading-relaxed">
-              The premier coding club fostering innovation, creativity, and technical excellence.
-              Join us in building the future through code.
+              We are programming community of NIT Durgapur, with focus on improving coding culture institute wide by conducting regular lectures from beginner to advance topics of programming. Our goal is to increase student's participation in inter-collegiate contest like ACM-ICPC and help them get better.
             </p>
             <div className="flex gap-4">
-              <a href="#" className="text-gray-400 hover:text-green-400 transition-colors">
+              <a href="https://github.com/RECursion-NITD" className="text-gray-400 hover:text-green-400 transition-colors">
                 <Github className="w-5 h-5" />
               </a>
-              <a href="#" className="text-gray-400 hover:text-green-400 transition-colors">
-                <Mail className="w-5 h-5" />
+              <a href="https://www.facebook.com/recursion.nit/" className="text-gray-400 hover:text-green-400 transition-colors">
+                <Facebook className="w-5 h-5" />
               </a>
             </div>
           </div>
@@ -69,15 +68,15 @@ const Footer = () => {
             <div className="space-y-2 text-gray-400">
               <div className="flex items-center gap-2">
                 <Mail className="w-4 h-4" />
-                <span>team.aavishkar@college.edu</span>
+                <span>recursion.nit@gmail.com</span>
               </div>
               <div className="flex items-center gap-2">
                 <Users className="w-4 h-4" />
-                <span>Room 204, CS Building</span>
+                <span>NIT Durgapur, Durgapur, W.B.</span>
               </div>
               <div className="flex items-center gap-2">
-                <Code className="w-4 h-4" />
-                <span>Weekly Meetings</span>
+                <Phone className="w-4 h-4" />
+                <span>Prathamesh Mandiye: +918240048380</span>
               </div>
             </div>
           </div>
@@ -86,7 +85,7 @@ const Footer = () => {
         <div className="border-t border-gray-800 mt-8 pt-6">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <p className="text-gray-500 text-sm font-mono">
-              © 2024 Team RECursion - Coding Club | Innovate • Compete • Excel
+              © 2026 Team RECursion
             </p>
             <div className="flex gap-6 mt-4 md:mt-0">
               <span className="text-gray-500 text-sm">Privacy Policy</span>

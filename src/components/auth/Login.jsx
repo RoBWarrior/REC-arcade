@@ -113,7 +113,7 @@ const Login = ({ onLogin }) => {
           <div>
             <label className="block text-green-400 font-semibold mb-2">
               <Lock className="w-4 h-4 inline mr-2" />
-              Registration Number
+              Roll Number
             </label>
             <input
               type="text"
@@ -122,14 +122,14 @@ const Login = ({ onLogin }) => {
               onChange={handleInputChange}
               className={`w-full px-4 py-3 bg-gray-900 border rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 transition-all uppercase ${errors.regNumber ? 'border-red-500 focus:ring-red-500' : 'border-gray-700 focus:ring-green-500'
                 }`}
-              placeholder="Enter college registration number (e.g., 22U10999)"
+              placeholder="Enter college roll number (e.g. 22CS80**)"
               disabled={loading}
             />
             {errors.regNumber && (
               <p className="text-red-400 text-sm mt-1">{errors.regNumber}</p>
             )}
             <p className="text-gray-500 text-xs mt-1">
-              Format: 22U10999 (Year + Department + Roll Number)
+              Format: 22CS80** (Year + Department + Roll Number)
             </p>
           </div>
 

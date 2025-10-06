@@ -117,7 +117,7 @@ const Events = () => {
                       
                       <div className="flex items-center gap-2 text-sm text-gray-400">
                         <Users className="w-4 h-4" />
-                        <span>Open to all club members</span>
+                        <span>Open to all year students</span>
                       </div>
                     </div>
                     

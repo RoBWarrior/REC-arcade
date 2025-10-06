@@ -11,12 +11,12 @@ const Home = ({ user }) => {
         </h2>
         {user && (
           <p className="text-2xl text-gray-300 mb-6">
-            Hello, <span className="text-green-400 font-bold">{user.username}</span>! 
+            Hello, <span className="text-green-400 font-bold">{user.username}</span>!
             <span className="text-gray-400 ml-3">({user.regNumber})</span>
           </p>
         )}
         <p className="text-xl text-gray-300 mb-12 max-w-3xl mx-auto leading-relaxed">
-          The premier coding club where innovation meets competition. 
+          The premier coding club where innovation meets competition.
           Challenge yourself with games, compete on leaderboards, and stay updated with our latest events.
         </p>
       </div>
@@ -28,17 +28,17 @@ const Home = ({ user }) => {
           <h3 className="text-2xl font-bold mb-4">Play Games</h3>
           <p className="text-gray-400 text-lg leading-relaxed">Test your skills with our online games</p>
         </div>
-        
+
         <div className="bg-gradient-to-br from-gray-800 to-gray-900 p-8 rounded-2xl border border-yellow-500/30 hover:border-yellow-500 transition-all hover:scale-105 hover:shadow-lg hover:shadow-yellow-500/20">
           <Trophy className="w-16 h-16 text-yellow-400 mb-6 mx-auto" />
           <h3 className="text-2xl font-bold mb-4">Compete</h3>
-          <p className="text-gray-400 text-lg leading-relaxed">Climb the leaderboards and prove yourself</p>
+          <p className="text-gray-400 text-lg leading-relaxed">Climb the leaderboards and get rewards</p>
         </div>
-        
+
         <div className="bg-gradient-to-br from-gray-800 to-gray-900 p-8 rounded-2xl border border-blue-500/30 hover:border-blue-500 transition-all hover:scale-105 hover:shadow-lg hover:shadow-blue-500/20">
           <Calendar className="w-16 h-16 text-blue-400 mb-6 mx-auto" />
           <h3 className="text-2xl font-bold mb-4">Events</h3>
-          <p className="text-gray-400 text-lg leading-relaxed">Join our hackathons and workshops</p>
+          <p className="text-gray-400 text-lg leading-relaxed">Join our Events</p>
         </div>
       </div>
 
@@ -48,45 +48,44 @@ const Home = ({ user }) => {
           <Code className="w-20 h-20 text-purple-400 mb-8 mx-auto" />
           <h3 className="text-3xl font-bold mb-6">Our Mission</h3>
           <p className="text-gray-300 text-lg leading-relaxed">
-            To foster innovation, creativity, and technical excellence among students. 
-            We provide a platform for coding enthusiasts to learn, compete, and grow together.
+            Working towards the improvement of campus's coding culture by organizing regular coding classes,coding contests and geeky sessions.
           </p>
         </div>
-        
+
         <div className="bg-gradient-to-br from-gray-800 to-gray-900 p-10 rounded-2xl border border-orange-500/30 hover:border-orange-500 transition-all hover:shadow-lg hover:shadow-orange-500/20">
           <Zap className="w-20 h-20 text-orange-400 mb-8 mx-auto" />
           <h3 className="text-3xl font-bold mb-6">What We Do</h3>
           <ul className="text-gray-300 space-y-4 text-left text-lg">
             <li className="flex items-center">
               <span className="w-2 h-2 bg-orange-400 rounded-full mr-4"></span>
-              Weekly coding challenges
+              Regular coding classes and geeky sessions
             </li>
             <li className="flex items-center">
               <span className="w-2 h-2 bg-orange-400 rounded-full mr-4"></span>
-              Hackathons and competitions
+              RECode : Monthly online coding contest
             </li>
             <li className="flex items-center">
               <span className="w-2 h-2 bg-orange-400 rounded-full mr-4"></span>
-              Technical workshops
+              Tech Townhall : Annual talk with successful students or alumni
             </li>
             <li className="flex items-center">
               <span className="w-2 h-2 bg-orange-400 rounded-full mr-4"></span>
-              Peer learning sessions
+              REChase : Annual treasure hunting competition
             </li>
             <li className="flex items-center">
               <span className="w-2 h-2 bg-orange-400 rounded-full mr-4"></span>
-              Industry guest lectures
+              Mind Sweepers : Combining logic and concepts with fun and frolic
             </li>
           </ul>
         </div>
       </div>
-
+      {/* 
       {/* Community Section */}
       <div className="bg-gradient-to-r from-gray-800 to-gray-900 p-12 rounded-2xl border border-green-500/30 max-w-5xl mx-auto hover:shadow-lg hover:shadow-green-500/20 transition-all">
         <Users className="w-16 h-16 text-green-400 mb-6 mx-auto" />
         <h3 className="text-3xl font-bold mb-6">Join Our Community</h3>
         <p className="text-gray-300 mb-8 text-lg leading-relaxed max-w-3xl mx-auto">
-          Connect with fellow coders, share knowledge, and participate in exciting competitions. 
+          Connect with fellow coders, share knowledge, and participate in exciting competitions.
           Your journey to becoming a better programmer starts here!
         </p>
         <div className="flex flex-wrap justify-center gap-6 text-base">
@@ -97,7 +96,7 @@ const Home = ({ user }) => {
           <span className="bg-gray-700 px-6 py-3 rounded-full hover:bg-green-500 hover:text-black transition-all cursor-pointer">#WebDev</span>
           <span className="bg-gray-700 px-6 py-3 rounded-full hover:bg-green-500 hover:text-black transition-all cursor-pointer">#MobileDev</span>
         </div>
-      </div>
+      </div> */
     </div>
   );
 };
