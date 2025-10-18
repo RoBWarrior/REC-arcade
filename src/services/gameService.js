@@ -200,8 +200,8 @@ export const getTopScores = async (gameType, limitCount = 10, period = 'allTime'
     const scores = [];
 
     // Get user details for each score
-    for (const doc of querySnapshot.docs) {
-      const scoreData = { id: doc.id, ...doc.data() };
+    for (const scoreDocSnap of querySnapshot.docs) {
+      const scoreData = { id: scoreDocSnap.id, ...scoreDocSnap.data() };
       
       // Get user profile
       const userDoc = await getDoc(doc(db, USERS_COLLECTION, scoreData.userId));
