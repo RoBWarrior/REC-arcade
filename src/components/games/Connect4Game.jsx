@@ -6,7 +6,7 @@ const COLS = 7;
 const PLAYER = 'red';
 const COMPUTER = 'blue';
 
-const Connect4 = () => {
+const Connect4 = ({ onGameOver }) => {
   const [board, setBoard] = useState(Array(ROWS).fill(null).map(() => Array(COLS).fill(null)));
   const [currentPlayer, setCurrentPlayer] = useState(PLAYER);
   const [winner, setWinner] = useState(null);
@@ -26,6 +26,24 @@ const Connect4 = () => {
       }, 500);
     }
   }, [currentPlayer, winner]);
+
+  // Trigger score submission when game ends
+  useEffect(() => {
+    if (!winner) return;
+    try {
+      const humanMoves = history.filter(h => h.player === PLAYER).length;
+      const base = 600;
+      const difficultyBonus = difficulty === 'hard' ? 300 : difficulty === 'medium' ? 150 : 0;
+      const outcomeBonus = winner === PLAYER ? 400 : 0;
+      const penalty = humanMoves * 15;
+      const finalScore = Math.max(0, base + difficultyBonus + outcomeBonus - penalty);
+      if (typeof onGameOver === 'function') {
+        onGameOver(finalScore);
+      }
+    } catch (_) {
+      // ignore scoring errors
+    }
+  }, [winner]);
 
   const checkWinner = (board) => {
     // Check horizontal
@@ -238,11 +256,11 @@ const Connect4 = () => {
       col = minimax(board, 4, -Infinity, Infinity, true)[0];
     }
 
-    handleColumnClick(col);
+    handleColumnClick(col, true);
   };
 
-  const handleColumnClick = (col) => {
-    if (winner || currentPlayer === COMPUTER || !isValidMove(board, col)) return;
+  const handleColumnClick = (col, byComputer = false) => {
+    if (winner || (!byComputer && currentPlayer === COMPUTER) || !isValidMove(board, col)) return;
 
     const row = getLowestRow(board, col);
     if (row === -1) return;

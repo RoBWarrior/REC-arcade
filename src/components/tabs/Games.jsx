@@ -373,11 +373,11 @@ const Games = ({ user }) => {
           )}
 
           {activeGame === 'connect4' && (
-            <Connect4 />
+            <Connect4 onGameOver={handleGameOver} />
           )}
 
           {activeGame === 'cryptoword' && (
-            <CryptowordGame />
+            <CryptowordGame onGameOver={handleGameOver} />
           )}
         </div>
 

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Sparkles, Trophy, Lightbulb, RotateCcw, ArrowLeft, ArrowRight } from 'lucide-react';
 
-const CryptowordGame = () => {
+const CryptowordGame = ({ onGameOver }) => {
 const puzzles = [
   // 🟢 EASY (15)
   { phrase: "THE QUICK BROWN FOX JUMPS OVER THE LAZY DOG", hint: "Famous pangram", difficulty: "Easy" },
@@ -165,6 +165,9 @@ const puzzles = [
       } else {
         setTimeout(() => {
           setGameState('finished');
+          if (typeof onGameOver === 'function') {
+            onGameOver(score + bonus);
+          }
         }, 1500);
       }
     }
