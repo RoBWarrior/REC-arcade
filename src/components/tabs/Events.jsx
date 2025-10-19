@@ -59,7 +59,7 @@ const Events = () => {
   return (
     <div>
       <div className="text-center mb-12">
-        <h2 className="text-4xl font-bold mb-4">Upcoming Events</h2>
+        <h2 className="text-4xl font-bold mb-4">Our Events</h2>
         <p className="text-gray-400 text-lg max-w-2xl mx-auto">
           Stay updated with our latest workshops, hackathons, and coding competitions. 
           Join us for exciting learning opportunities and networking events.
