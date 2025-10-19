@@ -89,11 +89,11 @@ const Games = ({ user }) => {
 
           <div
             onClick={() => setActiveGame('connect4')}
-            className="bg-gradient-to-br from-red-900 to-blue-900 p-8 rounded-2xl cursor-pointer hover:scale-105 transition-all border-2 border-yellow-500 hover:shadow-2xl hover:shadow-yellow-500/50 flex flex-col justify-between"
+            className="bg-gradient-to-br from-yellow-900 via-orange-900 to-yellow-800 p-8 rounded-2xl cursor-pointer hover:scale-105 transition-all border-2 border-yellow-500 hover:shadow-2xl hover:shadow-yellow-500/50 flex flex-col justify-between"
           >
             <div>
-              <div className="text-6xl mb-4 text-center">🔴</div>
-              <h3 className="text-3xl font-bold mb-4 text-yellow-400 text-center">CONNECT 4</h3>
+              <div className="text-6xl mb-4 text-center">🟡</div>
+              <h3 className="text-3xl font-bold mb-4 text-yellow-300 text-center">CONNECT 4</h3>
               <p className="text-gray-300 mb-6 text-center">Strategy board game</p>
               <div className="space-y-3 text-sm text-gray-400">
                 <p className="flex items-center">
@@ -194,7 +194,7 @@ const Games = ({ user }) => {
                   <ul className="space-y-2 text-sm">
                     <li className="flex items-center"><span className="w-2 h-2 bg-pink-400 rounded-full mr-3"></span>+50 points per box clicked.</li>
                     <li className="flex items-center"><span className="w-2 h-2 bg-pink-400 rounded-full mr-3"></span>Level cleared bonuses increase with difficulty.</li>
-                    <li className="flex items-center"><span className="w-2 h-2 bg-pink-400 rounded-full mr-3"></span>Miss too many boxes, and it’s game over!</li>
+                    <li className="flex items-center"><span className="w-2 h-2 bg-pink-400 rounded-full mr-3"></span>Miss too many boxes, and it's game over!</li>
                   </ul>
                 </div>
                 <div className="bg-pink-900/30 p-3 rounded-lg border border-pink-500/30">
@@ -204,12 +204,12 @@ const Games = ({ user }) => {
             </div>
             <div className="bg-gray-800 p-8 rounded-2xl border-2 border-yellow-500/30 hover:border-yellow-500/60 transition-all">
               <div className="flex items-center gap-4 mb-6">
-                <div className="text-5xl">🔴</div>
-                <h4 className="text-3xl font-bold text-yellow-400">Connect 4</h4>
+                <div className="text-5xl">🟡</div>
+                <h4 className="text-3xl font-bold text-yellow-300">Connect 4</h4>
               </div>
               <div className="space-y-4 text-gray-300">
                 <div className="bg-gray-900 p-4 rounded-lg">
-                  <h5 className="font-bold text-yellow-400 mb-2">How to Play:</h5>
+                  <h5 className="font-bold text-yellow-300 mb-2">How to Play:</h5>
                   <ul className="space-y-2 text-sm">
                     <li className="flex items-center"><span className="w-2 h-2 bg-yellow-400 rounded-full mr-3"></span>Click arrows above columns</li>
                     <li className="flex items-center"><span className="w-2 h-2 bg-yellow-400 rounded-full mr-3"></span>Your disc drops to the lowest spot</li>
@@ -217,7 +217,7 @@ const Games = ({ user }) => {
                   </ul>
                 </div>
                 <div className="bg-gray-900 p-4 rounded-lg">
-                  <h5 className="font-bold text-yellow-400 mb-2">Win Conditions:</h5>
+                  <h5 className="font-bold text-yellow-300 mb-2">Win Conditions:</h5>
                   <ul className="space-y-2 text-sm">
                     <li className="flex items-center"><span className="w-2 h-2 bg-yellow-400 rounded-full mr-3"></span>Connect 4 discs horizontally</li>
                     <li className="flex items-center"><span className="w-2 h-2 bg-yellow-400 rounded-full mr-3"></span>Connect 4 discs vertically</li>

@@ -148,7 +148,7 @@ const Profile = ({ user }) => {
       id: 4,
       title: 'Strategist',
       description: 'Win 3+ Connect 4 games',
-      icon: '🔴',
+      icon: '🟡',
       unlocked: stats.bestConnect4Score >= 3,
       progress: Math.min(stats.bestConnect4Score, 3),
       maxProgress: 3,
