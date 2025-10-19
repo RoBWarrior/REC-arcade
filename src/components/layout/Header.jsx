@@ -16,8 +16,8 @@ const Header = ({ activeTab, setActiveTab, user, onLogout }) => {
               />
             </div>
 
-            <h1 className="text-3xl font-bold" style={{ fontFamily: '"Courier New", monospace', letterSpacing: '2px' }}>
-              Team RECursion
+            <h1 className="text-3xl font-bold bg-gradient-to-r text-white bg-clip-text text-transparent tracking-wider">
+              RECarcade
             </h1>
           </div>
 

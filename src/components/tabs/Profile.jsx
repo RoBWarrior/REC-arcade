@@ -1,86 +1,94 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  User, 
-  Trophy, 
-  Gamepad2, 
-  Calendar, 
-  Award, 
-  Target, 
+import {
+  User,
+  Trophy,
+  Gamepad2,
+  Calendar,
+  Award,
+  Target,
   Star,
   Zap,
   Crown,
   Medal,
-  Users
 } from 'lucide-react';
-import { getUserScores } from '../../services/firebaseService';
+import { listenToUserScores } from '../../services/firebaseService';
 
 const Profile = ({ user }) => {
   const [userScores, setUserScores] = useState([]);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
     totalGames: 0,
+    averageScore: 0,
+    rank: 'Rookie',
     bestSnakeScore: 0,
     bestReactionScore: 0,
-    averageScore: 0,
-    rank: 'Rookie'
+    bestConnect4Score: 0,
+    bestCryptowordScore: 0,
   });
 
-  useEffect(() => {
-    loadUserStats();
-  }, [user]);
+  // 🔹 Normalize game names (handles SnakeGame / snake etc.)
+  const normalizeGame = (g) => g?.toLowerCase().replace('game', '').trim();
 
-  const loadUserStats = async () => {
-    setLoading(true);
-    try {
-      if (user?.id) {
-        // Get user's scores
-        const userScoresData = await getUserScores(user.id);
-        setUserScores(userScoresData);
+  // 🔹 Calculate stats dynamically from scores
+  const processUserScores = (scores) => {
+    const normalized = scores.map((s) => ({
+      ...s,
+      game: normalizeGame(s.gameType || s.game),
+    }));
 
-        // Calculate stats from user's actual game stats or scores
-        const gameStats = user.gameStats || {};
-        const snakeScoresForUser = userScoresData.filter(s => s.game === 'snake');
-        const reactionScoresForUser = userScoresData.filter(s => s.game === 'reaction');
+    // Group scores by game
+    const grouped = normalized.reduce((acc, s) => {
+      if (!acc[s.game]) acc[s.game] = [];
+      acc[s.game].push(s.score);
+      return acc;
+    }, {});
 
-        const bestSnake = gameStats.bestSnakeScore || 
-          (snakeScoresForUser.length > 0 ? Math.max(...snakeScoresForUser.map(s => s.score)) : 0);
-        const bestReaction = gameStats.bestReactionScore || 
-          (reactionScoresForUser.length > 0 ? Math.max(...reactionScoresForUser.map(s => s.score)) : 0);
+    // Find best scores for each game
+    const bestScores = Object.fromEntries(
+      Object.entries(grouped).map(([g, arr]) => [g, Math.max(...arr)])
+    );
 
-        const totalGames = gameStats.totalGamesPlayed || userScoresData.length;
-        const averageScore = totalGames > 0 ? 
-          (gameStats.totalScore || userScoresData.reduce((sum, score) => sum + score.score, 0)) / totalGames : 0;
+    // Total games and average
+    const totalGames = normalized.length;
+    const totalScore = normalized.reduce((sum, s) => sum + s.score, 0);
+    const avg = totalGames ? totalScore / totalGames : 0;
 
-        // Determine rank based on performance
-        let rank = 'Rookie';
-        if (totalGames >= 10 && averageScore > 2000) rank = 'Expert';
-        else if (totalGames >= 5 && averageScore > 1000) rank = 'Advanced';
-        else if (totalGames >= 2) rank = 'Intermediate';
+    // Determine rank
+    let rank = 'Rookie';
+    if (totalGames >= 10 && avg > 2000) rank = 'Expert';
+    else if (totalGames >= 5 && avg > 1000) rank = 'Advanced';
+    else if (totalGames >= 2) rank = 'Intermediate';
 
-        setStats({
-          totalGames,
-          bestSnakeScore: bestSnake,
-          bestReactionScore: bestReaction,
-          averageScore: Math.round(averageScore),
-          rank
-        });
-      } else {
-        // Fallback for demo mode or incomplete user data
-        setStats({
-          totalGames: 0,
-          bestSnakeScore: 0,
-          bestReactionScore: 0,
-          averageScore: 0,
-          rank: 'Rookie'
-        });
-      }
-    } catch (error) {
-      console.error('Error loading user stats:', error);
-    } finally {
-      setLoading(false);
-    }
+    setStats({
+      totalGames,
+      averageScore: Math.round(avg),
+      rank,
+      bestSnakeScore: bestScores.snake || 0,
+      bestReactionScore: bestScores.reaction || 0,
+      bestConnect4Score: bestScores.connect4 || 0,
+      bestCryptowordScore: bestScores.cryptoword || 0,
+    });
   };
 
+  // 🔹 Listen to real-time user score updates
+  useEffect(() => {
+    const userId = user?.uid || user?.id || user?.userId;
+    if (!userId) {
+      console.warn('No valid userId found for profile.');
+      setLoading(false);
+      return;
+    }
+
+    const unsubscribe = listenToUserScores(userId, (scores) => {
+      setUserScores(scores);
+      processUserScores(scores);
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, [user]);
+
+  // 🔹 Get rank visuals
   const getRankIcon = (rank) => {
     switch (rank) {
       case 'Expert':
@@ -107,6 +115,7 @@ const Profile = ({ user }) => {
     }
   };
 
+  // 🔹 Dynamic achievements
   const achievements = [
     {
       id: 1,
@@ -115,7 +124,7 @@ const Profile = ({ user }) => {
       icon: '🎮',
       unlocked: stats.totalGames >= 1,
       progress: Math.min(stats.totalGames, 1),
-      maxProgress: 1
+      maxProgress: 1,
     },
     {
       id: 2,
@@ -124,7 +133,7 @@ const Profile = ({ user }) => {
       icon: '🐍',
       unlocked: stats.bestSnakeScore >= 100,
       progress: Math.min(stats.bestSnakeScore, 100),
-      maxProgress: 100
+      maxProgress: 100,
     },
     {
       id: 3,
@@ -133,28 +142,47 @@ const Profile = ({ user }) => {
       icon: '⚡',
       unlocked: stats.bestReactionScore >= 3000,
       progress: Math.min(stats.bestReactionScore, 3000),
-      maxProgress: 3000
+      maxProgress: 3000,
     },
     {
       id: 4,
+      title: 'Strategist',
+      description: 'Win 3+ Connect 4 games',
+      icon: '🟡',
+      unlocked: stats.bestConnect4Score >= 3,
+      progress: Math.min(stats.bestConnect4Score, 3),
+      maxProgress: 3,
+    },
+    {
+      id: 5,
+      title: 'Cryptic Genius',
+      description: 'Score 5000+ in Cryptoword',
+      icon: '🔐',
+      unlocked: stats.bestCryptowordScore >= 5000,
+      progress: Math.min(stats.bestCryptowordScore, 5000),
+      maxProgress: 5000,
+    },
+    {
+      id: 6,
       title: 'Regular Player',
       description: 'Play 10 games',
       icon: '🏆',
       unlocked: stats.totalGames >= 10,
       progress: Math.min(stats.totalGames, 10),
-      maxProgress: 10
+      maxProgress: 10,
     },
     {
-      id: 5,
+      id: 7,
       title: 'Consistent Performer',
       description: 'Average score above 1000',
       icon: '📈',
       unlocked: stats.averageScore >= 1000,
       progress: Math.min(stats.averageScore, 1000),
-      maxProgress: 1000
-    }
+      maxProgress: 1000,
+    },
   ];
 
+  // 🔹 Loading spinner
   if (loading) {
     return (
       <div className="flex justify-center py-16">
@@ -165,75 +193,112 @@ const Profile = ({ user }) => {
 
   return (
     <div className="max-w-6xl mx-auto">
+      {/* User Info */}
       <div className="text-center mb-12">
         <div className="w-24 h-24 bg-gradient-to-br from-green-500 to-emerald-500 rounded-full flex items-center justify-center mx-auto mb-4">
           <User className="w-12 h-12 text-black" />
         </div>
-        <h2 className="text-4xl font-bold mb-2">{user.username}</h2>
-        <p className="text-gray-400 text-lg">{user.regNumber}</p>
+        <h2 className="text-4xl font-bold mb-2">{user?.username || 'Player'}</h2>
+        <p className="text-gray-400 text-lg">{user?.regNumber || user?.email}</p>
         <div className="flex items-center justify-center gap-2 mt-4">
           {getRankIcon(stats.rank)}
-          <span className={`bg-gradient-to-r ${getRankColor(stats.rank)} bg-clip-text text-transparent font-bold text-xl`}>
+          <span
+            className={`bg-gradient-to-r ${getRankColor(
+              stats.rank
+            )} bg-clip-text text-transparent font-bold text-xl`}
+          >
             {stats.rank}
           </span>
         </div>
       </div>
 
-      {/* Stats Cards */}
+      {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-        <div className="bg-gradient-to-br from-gray-800 to-gray-900 p-6 rounded-xl border border-green-500/30">
-          <div className="flex items-center gap-3 mb-2">
-            <Gamepad2 className="w-6 h-6 text-green-400" />
-            <span className="text-green-400 font-semibold">Games Played</span>
+        {[
+          {
+            label: 'Games Played',
+            value: stats.totalGames,
+            color: 'green',
+            icon: <Gamepad2 className="w-6 h-6 text-green-400" />,
+          },
+          {
+            label: 'Best Snake',
+            value: stats.bestSnakeScore,
+            color: 'yellow',
+            icon: <Trophy className="w-6 h-6 text-yellow-400" />,
+          },
+          {
+            label: 'Best Reaction',
+            value: stats.bestReactionScore,
+            color: 'pink',
+            icon: <Zap className="w-6 h-6 text-pink-400" />,
+          },
+          {
+            label: 'Best Connect 4',
+            value: stats.bestConnect4Score,
+            color: 'orange',
+            icon: <Target className="w-6 h-6 text-orange-400" />,
+          },
+          {
+            label: 'Best Cryptoword',
+            value: stats.bestCryptowordScore,
+            color: 'purple',
+            icon: <Star className="w-6 h-6 text-purple-400" />,
+          },
+          {
+            label: 'Average Score',
+            value: stats.averageScore,
+            color: 'blue',
+            icon: <Award className="w-6 h-6 text-blue-400" />,
+          },
+        ].map((stat, i) => (
+          <div
+            key={i}
+            className={`bg-gradient-to-br from-gray-800 to-gray-900 p-6 rounded-xl border border-${stat.color}-500/30`}
+          >
+            <div className="flex items-center gap-3 mb-2">
+              {stat.icon}
+              <span className={`text-${stat.color}-400 font-semibold`}>
+                {stat.label}
+              </span>
+            </div>
+            <div className="text-3xl font-bold text-white">{stat.value}</div>
           </div>
-          <div className="text-3xl font-bold text-white">{stats.totalGames}</div>
-        </div>
-
-        <div className="bg-gradient-to-br from-gray-800 to-gray-900 p-6 rounded-xl border border-yellow-500/30">
-          <div className="flex items-center gap-3 mb-2">
-            <Trophy className="w-6 h-6 text-yellow-400" />
-            <span className="text-yellow-400 font-semibold">Best Snake</span>
-          </div>
-          <div className="text-3xl font-bold text-white">{stats.bestSnakeScore}</div>
-        </div>
-
-        <div className="bg-gradient-to-br from-gray-800 to-gray-900 p-6 rounded-xl border border-pink-500/30">
-          <div className="flex items-center gap-3 mb-2">
-            <Zap className="w-6 h-6 text-pink-400" />
-            <span className="text-pink-400 font-semibold">Best Reaction</span>
-          </div>
-          <div className="text-3xl font-bold text-white">{stats.bestReactionScore}</div>
-        </div>
-
-        <div className="bg-gradient-to-br from-gray-800 to-gray-900 p-6 rounded-xl border border-blue-500/30">
-          <div className="flex items-center gap-3 mb-2">
-            <Target className="w-6 h-6 text-blue-400" />
-            <span className="text-blue-400 font-semibold">Average Score</span>
-          </div>
-          <div className="text-3xl font-bold text-white">{stats.averageScore}</div>
-        </div>
+        ))}
       </div>
 
       {/* Recent Games */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Recent Games List */}
         <div className="bg-gray-800 p-6 rounded-xl border border-green-500/30">
           <h3 className="text-2xl font-bold mb-6 flex items-center gap-2">
             <Calendar className="text-green-400" />
             Recent Games
           </h3>
-          
+
           {userScores.length > 0 ? (
             <div className="space-y-3">
-              {userScores.slice(0, 5).map((score, index) => (
-                <div key={index} className="bg-gray-900 p-4 rounded-lg flex justify-between items-center">
+              {userScores.slice(0, 5).map((score, i) => (
+                <div
+                  key={i}
+                  className="bg-gray-900 p-4 rounded-lg flex justify-between items-center"
+                >
                   <div>
-                    <div className="font-bold text-white capitalize">{score.game} Game</div>
+                    <div className="font-bold text-white capitalize">
+                      {normalizeGame(score.gameType || score.game)}
+                    </div>
                     <div className="text-sm text-gray-400">
-                      {new Date(score.timestamp.toDate ? score.timestamp.toDate() : score.timestamp).toLocaleDateString()}
+                      {new Date(
+                        score.timestamp?.toDate
+                          ? score.timestamp.toDate()
+                          : score.timestamp
+                      ).toLocaleDateString()}
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="text-xl font-bold text-yellow-400">{score.score}</div>
+                    <div className="text-xl font-bold text-yellow-400">
+                      {score.score}
+                    </div>
                     <div className="text-sm text-gray-400">points</div>
                   </div>
                 </div>
@@ -243,7 +308,9 @@ const Profile = ({ user }) => {
             <div className="text-center py-8">
               <Gamepad2 className="w-12 h-12 text-gray-600 mx-auto mb-4" />
               <p className="text-gray-400">No games played yet</p>
-              <p className="text-gray-500 text-sm">Start playing to see your history!</p>
+              <p className="text-gray-500 text-sm">
+                Start playing to see your history!
+              </p>
             </div>
           )}
         </div>
@@ -254,72 +321,56 @@ const Profile = ({ user }) => {
             <Award className="text-purple-400" />
             Achievements
           </h3>
-          
+
           <div className="space-y-4">
-            {achievements.map((achievement) => (
-              <div 
-                key={achievement.id}
+            {achievements.map((a) => (
+              <div
+                key={a.id}
                 className={`p-4 rounded-lg border transition-all ${
-                  achievement.unlocked 
-                    ? 'bg-gradient-to-r from-purple-500/20 to-purple-600/20 border-purple-500/50' 
+                  a.unlocked
+                    ? 'bg-gradient-to-r from-purple-500/20 to-purple-600/20 border-purple-500/50'
                     : 'bg-gray-900 border-gray-700'
                 }`}
               >
                 <div className="flex items-center gap-4">
-                  <div className={`text-2xl ${achievement.unlocked ? '' : 'grayscale opacity-50'}`}>
-                    {achievement.icon}
+                  <div
+                    className={`text-2xl ${
+                      a.unlocked ? '' : 'grayscale opacity-50'
+                    }`}
+                  >
+                    {a.icon}
                   </div>
                   <div className="flex-1">
-                    <div className={`font-bold ${achievement.unlocked ? 'text-purple-400' : 'text-gray-400'}`}>
-                      {achievement.title}
+                    <div
+                      className={`font-bold ${
+                        a.unlocked ? 'text-purple-400' : 'text-gray-400'
+                      }`}
+                    >
+                      {a.title}
                     </div>
-                    <div className="text-sm text-gray-400 mb-2">{achievement.description}</div>
+                    <div className="text-sm text-gray-400 mb-2">
+                      {a.description}
+                    </div>
                     <div className="w-full bg-gray-700 rounded-full h-2">
-                      <div 
+                      <div
                         className={`h-2 rounded-full transition-all ${
-                          achievement.unlocked ? 'bg-purple-500' : 'bg-green-500'
+                          a.unlocked ? 'bg-purple-500' : 'bg-green-500'
                         }`}
-                        style={{ width: `${(achievement.progress / achievement.maxProgress) * 100}%` }}
+                        style={{
+                          width: `${(a.progress / a.maxProgress) * 100}%`,
+                        }}
                       ></div>
                     </div>
                     <div className="text-xs text-gray-500 mt-1">
-                      {achievement.progress}/{achievement.maxProgress}
+                      {Math.min(a.progress, a.maxProgress)}/{a.maxProgress}
                     </div>
                   </div>
-                  {achievement.unlocked && (
+                  {a.unlocked && (
                     <Star className="w-5 h-5 text-yellow-400" />
                   )}
                 </div>
               </div>
             ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Next Goals */}
-      <div className="mt-12 bg-gradient-to-r from-gray-800 to-gray-900 p-8 rounded-xl border border-green-500/30">
-        <h3 className="text-2xl font-bold mb-6 text-center">Next Goals</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="text-center">
-            <div className="text-3xl mb-2">🎯</div>
-            <h4 className="font-bold text-green-400 mb-2">Improve Snake Score</h4>
-            <p className="text-gray-400 text-sm">
-              Try to beat your best score of {stats.bestSnakeScore}
-            </p>
-          </div>
-          <div className="text-center">
-            <div className="text-3xl mb-2">⚡</div>
-            <h4 className="font-bold text-pink-400 mb-2">Faster Reactions</h4>
-            <p className="text-gray-400 text-sm">
-              Aim for a reaction score above {stats.bestReactionScore + 500}
-            </p>
-          </div>
-          <div className="text-center">
-            <div className="text-3xl mb-2">🏆</div>
-            <h4 className="font-bold text-yellow-400 mb-2">Unlock Achievements</h4>
-            <p className="text-gray-400 text-sm">
-              {achievements.filter(a => !a.unlocked).length} achievements remaining
-            </p>
           </div>
         </div>
       </div>

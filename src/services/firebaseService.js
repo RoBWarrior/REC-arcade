@@ -265,7 +265,8 @@ import {
   deleteDoc,
   doc,
   updateDoc,
-  serverTimestamp 
+  serverTimestamp,
+  onSnapshot
 } from 'firebase/firestore';
 import { db } from '../config/firebase';
 
@@ -495,3 +496,21 @@ export const getUserScores = async (userId) => {
     return [];
   }
 };
+
+export const listenToUserScores = (userId, callback) => {
+  try {
+    const q = query(collection(db, 'gameScores'), where('userId', '==', userId), orderBy('timestamp', 'desc'));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const scores = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      callback(scores);
+    });
+    return unsubscribe;
+  } catch (error) {
+    console.error('Error listening to user scores:', error);
+    return () => {};
+  }
+};
+
