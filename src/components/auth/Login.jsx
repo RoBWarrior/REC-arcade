@@ -84,10 +84,10 @@ const Login = ({ onLogin }) => {
             />
           </div>
 
-          <h1 className="text-3xl font-bold text-white mb-2" style={{ fontFamily: '"Courier New", monospace', letterSpacing: '2px' }}>
-            Team RECursion
+          <h1 className="text-3xl font-bold text-white mb-2">
+            RECarcade
           </h1>
-          <p className="text-gray-400">Coding Club Portal</p>
+          <p className="text-gray-400">Created and managed by Team RECursion</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
