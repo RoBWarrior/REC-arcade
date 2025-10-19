@@ -19,6 +19,7 @@ const SnakeGame = ({ onGameOver }) => {
     const gridSize = 20;
     const tileCount = canvas.width / gridSize;
 
+    // 🐍 SLOWER SPEED — increased interval from 100ms → 250ms
     const gameLoop = setInterval(() => {
       const state = gameStateRef.current;
       if (state.gameOver) return;
@@ -28,6 +29,7 @@ const SnakeGame = ({ onGameOver }) => {
         y: state.snake[0].y + state.direction.y 
       };
 
+      // Collision detection
       if (head.x < 0 || head.x >= tileCount || head.y < 0 || head.y >= tileCount) {
         state.gameOver = true;
         onGameOver(score);
@@ -52,6 +54,7 @@ const SnakeGame = ({ onGameOver }) => {
         state.snake.pop();
       }
 
+      // Drawing
       ctx.fillStyle = '#0a0a0a';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
@@ -66,7 +69,7 @@ const SnakeGame = ({ onGameOver }) => {
       ctx.fillStyle = '#00ff88';
       ctx.font = '16px "Courier New"';
       ctx.fillText(`SCORE: ${score}`, 10, 20);
-    }, 100);
+    }, 250); // <-- slower movement speed
 
     const handleKeyPress = (e) => {
       const state = gameStateRef.current;

@@ -1,274 +1,249 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Sparkles, Trophy, Lightbulb, RotateCcw, ArrowLeft, ArrowRight } from 'lucide-react';
+import React, { useState, useEffect, useRef } from "react";
+import { Trophy, Lightbulb, RotateCcw, Sparkles, Clock } from "lucide-react";
+
+const LOCAL_PHRASES = {
+  Easy: [
+    { phrase: "THE QUICK BROWN FOX", hint: "Famous pangram" },
+    { phrase: "PRACTICE MAKES PERFECT", hint: "Common saying" },
+    { phrase: "HONESTY IS THE BEST POLICY", hint: "Moral advice" },
+    { phrase: "BETTER LATE THAN NEVER", hint: "Timeliness quote" },
+  ],
+  Medium: [
+    { phrase: "ACTIONS SPEAK LOUDER THAN WORDS", hint: "Proverb" },
+    { phrase: "TIME FLIES WHEN YOU ARE HAVING FUN", hint: "About time" },
+    { phrase: "THE EARLY BIRD CATCHES THE WORM", hint: "Morning advice" },
+    { phrase: "THE GRASS IS ALWAYS GREENER ON THE OTHER SIDE", hint: "About envy" },
+  ],
+  Hard: [
+    { phrase: "FORTUNE FAVORS THE BOLD", hint: "Ancient wisdom" },
+    { phrase: "ALL THAT GLITTERS IS NOT GOLD", hint: "Appearances deceive" },
+    { phrase: "THE ROAD TO HELL IS PAVED WITH GOOD INTENTIONS", hint: "Cautionary proverb" },
+    { phrase: "DISCRETION IS THE BETTER PART OF VALOR", hint: "Wisdom in retreat" },
+  ],
+};
+
+const determineDifficulty = (phrase) => {
+  const length = phrase.replace(/[^A-Z]/g, "").length;
+  if (length <= 20) return "Easy";
+  if (length <= 35) return "Medium";
+  return "Hard";
+};
+
+const DIFFICULTY_TIMERS = {
+  Easy: 60,
+  Medium: 90,
+  Hard: 120,
+};
 
 const CryptowordGame = ({ onGameOver }) => {
-const puzzles = [
-  // 🟢 EASY (15)
-  { phrase: "THE QUICK BROWN FOX JUMPS OVER THE LAZY DOG", hint: "Famous pangram", difficulty: "Easy" },
-  { phrase: "PRACTICE MAKES PERFECT", hint: "Common saying", difficulty: "Easy" },
-  { phrase: "KNOWLEDGE IS POWER", hint: "Famous quote", difficulty: "Easy" },
-  { phrase: "HONESTY IS THE BEST POLICY", hint: "Moral advice", difficulty: "Easy" },
-  { phrase: "BETTER LATE THAN NEVER", hint: "Common proverb", difficulty: "Easy" },
-  { phrase: "LOOK BEFORE YOU LEAP", hint: "Think before acting", difficulty: "Easy" },
-  { phrase: "EASIER SAID THAN DONE", hint: "Reality check", difficulty: "Easy" },
-  { phrase: "DON’T JUDGE A BOOK BY ITS COVER", hint: "About appearances", difficulty: "Easy" },
-  { phrase: "TWO HEADS ARE BETTER THAN ONE", hint: "Teamwork", difficulty: "Easy" },
-  { phrase: "A FRIEND IN NEED IS A FRIEND INDEED", hint: "True friendship", difficulty: "Easy" },
-  { phrase: "NO PAIN NO GAIN", hint: "Fitness motto", difficulty: "Easy" },
-  { phrase: "AN APPLE A DAY KEEPS THE DOCTOR AWAY", hint: "Health tip", difficulty: "Easy" },
-  { phrase: "EVERY CLOUD HAS A SILVER LINING", hint: "Optimism", difficulty: "Easy" },
-  { phrase: "LAUGHTER IS THE BEST MEDICINE", hint: "Cheerful saying", difficulty: "Easy" },
-  { phrase: "WHEN IN ROME DO AS THE ROMANS DO", hint: "Adapt to surroundings", difficulty: "Easy" },
-
-  // 🟡 MEDIUM (20)
-  { phrase: "TIME FLIES WHEN YOU ARE HAVING FUN", hint: "About time", difficulty: "Medium" },
-  { phrase: "ACTIONS SPEAK LOUDER THAN WORDS", hint: "Proverb", difficulty: "Medium" },
-  { phrase: "THE EARLY BIRD CATCHES THE WORM", hint: "Morning advice", difficulty: "Medium" },
-  { phrase: "DON’T COUNT YOUR CHICKENS BEFORE THEY HATCH", hint: "Be patient", difficulty: "Medium" },
-  { phrase: "BIRDS OF A FEATHER FLOCK TOGETHER", hint: "About similarity", difficulty: "Medium" },
-  { phrase: "THE PEN IS MIGHTIER THAN THE SWORD", hint: "Power of words", difficulty: "Medium" },
-  { phrase: "NEVER PUT ALL YOUR EGGS IN ONE BASKET", hint: "Investment wisdom", difficulty: "Medium" },
-  { phrase: "A JOURNEY OF A THOUSAND MILES BEGINS WITH A SINGLE STEP", hint: "Motivational", difficulty: "Medium" },
-  { phrase: "THE GRASS IS ALWAYS GREENER ON THE OTHER SIDE", hint: "Envy warning", difficulty: "Medium" },
-  { phrase: "TO ERR IS HUMAN TO FORGIVE DIVINE", hint: "Forgiveness quote", difficulty: "Medium" },
-  { phrase: "YOU CAN’T HAVE YOUR CAKE AND EAT IT TOO", hint: "Can’t have everything", difficulty: "Medium" },
-  { phrase: "THERE IS NO PLACE LIKE HOME", hint: "Comfort zone", difficulty: "Medium" },
-  { phrase: "THE CUSTOMER IS ALWAYS RIGHT", hint: "Business mantra", difficulty: "Medium" },
-  { phrase: "OLD HABITS DIE HARD", hint: "Behavioral truth", difficulty: "Medium" },
-  { phrase: "DON’T BITE THE HAND THAT FEEDS YOU", hint: "Ingratitude warning", difficulty: "Medium" },
-  { phrase: "THE MORE THE MERRIER", hint: "Group fun", difficulty: "Medium" },
-  { phrase: "TOO MANY COOKS SPOIL THE BROTH", hint: "Teamwork caution", difficulty: "Medium" },
-  { phrase: "ABSENCE MAKES THE HEART GROW FONDER", hint: "Love quote", difficulty: "Medium" },
-  { phrase: "NECESSITY IS THE MOTHER OF INVENTION", hint: "Innovation origin", difficulty: "Medium" },
-  { phrase: "BEAUTY IS IN THE EYE OF THE BEHOLDER", hint: "Subjective opinion", difficulty: "Medium" },
-
-  // 🔴 HARD (15)
-  { phrase: "FORTUNE FAVORS THE BOLD", hint: "Ancient wisdom", difficulty: "Hard" },
-  { phrase: "WHERE THERE IS A WILL THERE IS A WAY", hint: "Motivational", difficulty: "Hard" },
-  { phrase: "A WOLF IN SHEEPS CLOTHING", hint: "Deceptive appearance", difficulty: "Hard" },
-  { phrase: "THE ROAD TO HELL IS PAVED WITH GOOD INTENTIONS", hint: "Warning about actions", difficulty: "Hard" },
-  { phrase: "EVERY DOG HAS ITS DAY", hint: "Patience proverb", difficulty: "Hard" },
-  { phrase: "YOU REAP WHAT YOU SOW", hint: "Karma saying", difficulty: "Hard" },
-  { phrase: "ALL THAT GLITTERS IS NOT GOLD", hint: "Appearances deceive", difficulty: "Hard" },
-  { phrase: "THE PROOF OF THE PUDDING IS IN THE EATING", hint: "Test results", difficulty: "Hard" },
-  { phrase: "HE WHO LAUGHS LAST LAUGHS BEST", hint: "Patience and success", difficulty: "Hard" },
-  { phrase: "THE ENDS JUSTIFY THE MEANS", hint: "Machiavellian idea", difficulty: "Hard" },
-  { phrase: "YOU CANNOT JUDGE A BOOK BY ITS COVER", hint: "About judgment", difficulty: "Hard" },
-  { phrase: "THE DEVIL IS IN THE DETAILS", hint: "About precision", difficulty: "Hard" },
-  { phrase: "FAMILIARITY BREEDS CONTEMPT", hint: "Overexposure issue", difficulty: "Hard" },
-  { phrase: "DISCRETION IS THE BETTER PART OF VALOR", hint: "Wisdom in retreat", difficulty: "Hard" },
-  { phrase: "GREAT MINDS THINK ALIKE", hint: "Coincidence compliment", difficulty: "Hard" }
-];
-
-
-  const [gameState, setGameState] = useState('menu');
-  const [currentPuzzle, setCurrentPuzzle] = useState(0);
+  const [puzzle, setPuzzle] = useState(null);
+  const [gameState, setGameState] = useState("menu");
   const [cryptoMap, setCryptoMap] = useState({});
   const [userMap, setUserMap] = useState({});
-  const [selectedCell, setSelectedCell] = useState(null);
   const [score, setScore] = useState(0);
   const [hintsUsed, setHintsUsed] = useState(0);
-  const [errors, setErrors] = useState(new Set());
+  const [revealedLetters, setRevealedLetters] = useState(new Set());
+  const [loading, setLoading] = useState(false);
+  const [level, setLevel] = useState(1);
+  const [timeLeft, setTimeLeft] = useState(0);
+  const [usedPhrases, setUsedPhrases] = useState([]); 
+  const timerRef = useRef(null);
   const inputRefs = useRef({});
 
-  useEffect(() => {
-    if (gameState === 'playing') {
-      generateCryptoMap();
-    }
-  }, [currentPuzzle, gameState]);
+    const fetchPhrase = async () => {
+    setLoading(true);
+    let phrase = "";
+    let hint = "";
+    let difficulty = "Easy";
 
-  const generateCryptoMap = () => {
-    const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
-    const shuffled = [...alphabet].sort(() => Math.random() - 0.5);
-    const map = {};
-    alphabet.forEach((letter, i) => {
-      map[letter] = shuffled[i];
-    });
-    setCryptoMap(map);
-    setUserMap({});
-    setErrors(new Set());
-    setSelectedCell(null);
+    try {
+      const response = await fetch("https://api.quotable.io/random?maxLength=50");
+      const data = await response.json();
+      phrase = data.content.toUpperCase().replace(/[^A-Z ]/g, "");
+      hint = `Quote by ${data.author}`;
+      difficulty = determineDifficulty(phrase);
+    } catch {
+      const difficulties = Object.keys(LOCAL_PHRASES);
+      let available = difficulties.flatMap((diff) =>
+        LOCAL_PHRASES[diff].map((p) => ({ ...p, difficulty: diff }))
+      );
+
+      const unused = available.filter((p) => !usedPhrases.includes(p.phrase));
+      const phrasePool = unused.length > 0 ? unused : available;
+      const randomPhrase = phrasePool[Math.floor(Math.random() * phrasePool.length)];
+
+      phrase = randomPhrase.phrase;
+      hint = randomPhrase.hint;
+      difficulty = randomPhrase.difficulty;
+    } finally {
+      setUsedPhrases((prev) => [...prev, phrase]);
+      setPuzzle({ phrase, hint, difficulty });
+      setLoading(false);
+    }
   };
 
-  const startGame = () => {
-    setGameState('playing');
-    setCurrentPuzzle(0);
-    setScore(1000);
+
+  useEffect(() => {
+    if (gameState === "playing" && puzzle) {
+      generateCryptoMap();
+      startTimer(puzzle.difficulty);
+    }
+    return () => clearInterval(timerRef.current);
+  }, [puzzle, gameState]);
+
+  const generateCryptoMap = () => {
+    const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+    const numbers = Array.from({ length: 26 }, (_, i) => i + 1).sort(() => Math.random() - 0.5);
+    const numberMap = {};
+    const reverseMap = {};
+    alphabet.forEach((letter, i) => {
+      numberMap[letter] = numbers[i];
+      reverseMap[numbers[i]] = letter;
+    });
+    const phraseLetters = [...new Set(puzzle.phrase.replace(/[^A-Z]/g, ""))];
+    const revealed = new Set(phraseLetters.sort(() => Math.random() - 0.5).slice(0, 3));
+    setCryptoMap({ numberMap, reverseMap });
+    setRevealedLetters(revealed);
+    setUserMap({});
+  };
+
+  const startGame = async () => {
+    setScore(0);
+    setLevel(1);
+    await fetchPhrase();
+    setGameState("playing");
     setHintsUsed(0);
   };
 
-  const handleLetterInput = (cryptoLetter, value) => {
-    if (!value || value.length === 0) {
-      const newMap = { ...userMap };
-      delete newMap[cryptoLetter];
-      setUserMap(newMap);
-      checkErrors(newMap);
-      return;
-    }
-
-    const letter = value.toUpperCase();
-    if (!/[A-Z]/.test(letter)) return;
-
-    // Check if letter already used for different crypto letter
-    const newErrors = new Set(errors);
-    Object.entries(userMap).forEach(([key, val]) => {
-      if (key !== cryptoLetter && val === letter) {
-        newErrors.add(key);
-        newErrors.add(cryptoLetter);
-      }
-    });
-
-    const newMap = { ...userMap, [cryptoLetter]: letter };
-    setUserMap(newMap);
-    checkErrors(newMap);
+  const startTimer = (difficulty) => {
+    clearInterval(timerRef.current);
+    setTimeLeft(DIFFICULTY_TIMERS[difficulty]);
+    timerRef.current = setInterval(() => {
+      setTimeLeft((t) => {
+        if (t <= 1) {
+          clearInterval(timerRef.current);
+          handleTimeUp();
+          return 0;
+        }
+        return t - 1;
+      });
+    }, 1000);
   };
 
-  const checkErrors = (map) => {
-    const newErrors = new Set();
-    const usedLetters = {};
-    
-    Object.entries(map).forEach(([crypto, user]) => {
-      if (usedLetters[user]) {
-        newErrors.add(crypto);
-        newErrors.add(usedLetters[user]);
-      } else {
-        usedLetters[user] = crypto;
-      }
-    });
-    
-    setErrors(newErrors);
+  const handleTimeUp = () => {
+    setGameState("finished");
+    if (typeof onGameOver === "function") onGameOver(score);
+  };
+
+  const handleLetterInput = (cipherNumber, value) => {
+    const letter = value.toUpperCase();
+    if (!letter) {
+      const newMap = { ...userMap };
+      delete newMap[cipherNumber];
+      setUserMap(newMap);
+      return;
+    }
+    if (!/[A-Z]/.test(letter)) return;
+    setUserMap({ ...userMap, [cipherNumber]: letter });
   };
 
   const checkWin = () => {
-    const phrase = puzzles[currentPuzzle].phrase;
-    const letters = phrase.replace(/[^A-Z]/g, '');
-    
-    for (let letter of letters) {
-      const crypto = cryptoMap[letter];
-      if (!userMap[crypto] || userMap[crypto] !== letter) {
-        return false;
-      }
+    const phrase = puzzle.phrase;
+    const clean = phrase.replace(/[^A-Z]/g, "");
+    for (let ch of clean) {
+      const num = cryptoMap.numberMap[ch];
+      if (revealedLetters.has(ch)) continue;
+      if (!userMap[num] || userMap[num] !== ch) return false;
     }
     return true;
   };
 
-  useEffect(() => {
-    if (gameState === 'playing' && Object.keys(userMap).length > 0 && checkWin()) {
-      const bonus = Math.max(0, 500 - hintsUsed * 100);
-      setScore(s => s + bonus);
-      
-      if (currentPuzzle < puzzles.length - 1) {
-        setTimeout(() => {
-          setCurrentPuzzle(c => c + 1);
-          setHintsUsed(0);
-        }, 1500);
-      } else {
-        setTimeout(() => {
-          setGameState('finished');
-          if (typeof onGameOver === 'function') {
-            onGameOver(score + bonus);
-          }
-        }, 1500);
-      }
-    }
-  }, [userMap, gameState]);
-
   const useHint = () => {
-    const phrase = puzzles[currentPuzzle].phrase;
-    const letters = phrase.replace(/[^A-Z]/g, '');
-    const unsolvedLetters = [...new Set(letters)].filter(letter => {
-      const crypto = cryptoMap[letter];
-      return !userMap[crypto] || userMap[crypto] !== letter;
+    const phrase = puzzle.phrase;
+    const letters = phrase.replace(/[^A-Z]/g, "");
+    const unsolved = [...new Set(letters)].filter((l) => {
+      const num = cryptoMap.numberMap[l];
+      return !userMap[num] || userMap[num] !== l;
     });
-
-    if (unsolvedLetters.length > 0) {
-      const randomLetter = unsolvedLetters[Math.floor(Math.random() * unsolvedLetters.length)];
-      const crypto = cryptoMap[randomLetter];
-      setUserMap({ ...userMap, [crypto]: randomLetter });
-      setHintsUsed(h => h + 1);
-      setScore(s => Math.max(0, s - 50));
+    if (unsolved.length > 0) {
+      const hintLetter = unsolved[Math.floor(Math.random() * unsolved.length)];
+      const num = cryptoMap.numberMap[hintLetter];
+      setUserMap({ ...userMap, [num]: hintLetter });
+      setHintsUsed((h) => h + 1);
+      setScore((s) => Math.max(0, s - 50));
     }
   };
 
-  const moveSelection = (direction) => {
-    if (!selectedCell) return;
-    
-    const phrase = puzzles[currentPuzzle].phrase;
-    const positions = [];
-    
-    for (let i = 0; i < phrase.length; i++) {
-      if (/[A-Z]/.test(phrase[i])) {
-        positions.push(i);
-      }
-    }
-    
-    const currentIndex = positions.indexOf(selectedCell);
-    if (currentIndex === -1) return;
-    
-    const newIndex = direction === 'left' 
-      ? Math.max(0, currentIndex - 1)
-      : Math.min(positions.length - 1, currentIndex + 1);
-    
-    const newPos = positions[newIndex];
-    setSelectedCell(newPos);
-    
-    const crypto = cryptoMap[phrase[newPos]];
-    if (inputRefs.current[`${newPos}-${crypto}`]) {
-      inputRefs.current[`${newPos}-${crypto}`].focus();
+  const checkAnswer = () => {
+    if (checkWin()) {
+      const bonus = Math.max(0, 500 - hintsUsed * 100);
+      const newScore = score + bonus;
+      setScore(newScore);
+      clearInterval(timerRef.current);
+      setTimeout(async () => {
+        // 🆕 Next level
+        setLevel((lvl) => lvl + 1);
+        await fetchPhrase();
+        setHintsUsed(0);
+      }, 800);
+    } else {
+      Object.entries(userMap).forEach(([num, letter]) => {
+        const actual = cryptoMap.reverseMap[num];
+        const input = Object.values(inputRefs.current).find(
+          (el) => el && el.dataset.num === num
+        );
+        if (actual !== letter && input) {
+          input.classList.add("animate-pulse", "border-red-600");
+          setTimeout(() => input.classList.remove("animate-pulse", "border-red-600"), 700);
+        }
+      });
     }
   };
-
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (gameState !== 'playing' || !selectedCell) return;
-      
-      if (e.key === 'ArrowLeft') {
-        e.preventDefault();
-        moveSelection('left');
-      } else if (e.key === 'ArrowRight') {
-        e.preventDefault();
-        moveSelection('right');
-      }
-    };
-    
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [gameState, selectedCell]);
 
   const renderPuzzle = () => {
-    const phrase = puzzles[currentPuzzle].phrase;
-    const words = phrase.split(' ');
-    
-    let charIndex = 0;
-    
+    if (!cryptoMap.numberMap) return null;
+    const phrase = puzzle.phrase;
+    const words = phrase.split(" ");
+    const allLetters = [...new Set(phrase.replace(/[^A-Z]/g, ""))];
+    let index = 0;
     return (
-      <div className="flex flex-wrap gap-4 justify-center mb-6">
-        {words.map((word, wordIdx) => (
-          <div key={wordIdx} className="flex flex-col gap-2">
-            <div className="flex gap-1">
-              {word.split('').map((char, charIdx) => {
-                const currentCharIndex = charIndex++;
-                const crypto = cryptoMap[char];
-                const isSelected = selectedCell === currentCharIndex;
-                const hasError = errors.has(crypto);
-                
+      <div className="flex flex-wrap gap-3 justify-center mb-6">
+        {words.map((word, wi) => (
+          <div key={wi} className="flex flex-col gap-1.5">
+            <div className="flex gap-1.5">
+              {word.split("").map((char, ci) => {
+                if (!/[A-Z]/.test(char)) return <div key={ci} className="w-4" />;
+                const id = index++;
+                const num = cryptoMap.numberMap[char];
+                const isRevealed = revealedLetters.has(char);
+                const userLetter = userMap[num];
+                const color =
+                  !userLetter
+                    ? "border-gray-500 bg-gray-800/50"
+                    : userLetter === char
+                    ? "border-green-500 bg-green-600/40"
+                    : allLetters.includes(userLetter)
+                    ? "border-yellow-400 bg-yellow-500/30"
+                    : "border-red-500 bg-red-600/40";
                 return (
-                  <div key={charIdx} className="flex flex-col items-center">
+                  <div key={ci} className="flex flex-col items-center">
                     <input
-                      ref={el => inputRefs.current[`${currentCharIndex}-${crypto}`] = el}
+                      ref={(el) => (inputRefs.current[`${id}-${num}`] = el)}
+                      data-num={num}
                       type="text"
                       maxLength="1"
-                      value={userMap[crypto] || ''}
-                      onChange={(e) => handleLetterInput(crypto, e.target.value)}
-                      onFocus={() => setSelectedCell(currentCharIndex)}
-                      className={`w-10 h-10 text-center text-xl font-bold border-2 rounded bg-gray-800 text-white uppercase transition-all ${
-                        isSelected ? 'border-yellow-400 ring-2 ring-yellow-400' : 
-                        hasError ? 'border-red-500' :
-                        userMap[crypto] && cryptoMap[userMap[crypto]] === crypto ? 'border-green-500' :
-                        'border-gray-600'
-                      }`}
+                      value={isRevealed ? char : userLetter || ""}
+                      disabled={isRevealed}
+                      onChange={(e) => handleLetterInput(num, e.target.value)}
+                      className={`w-9 h-9 text-center text-lg font-bold border-2 rounded-md text-white uppercase transition-all shadow-md ${
+                        isRevealed
+                          ? "bg-green-600/40 border-green-400"
+                          : color
+                      } focus:outline-none focus:ring-2 focus:ring-purple-400`}
                     />
-                    <div className="text-xs text-gray-500 mt-1 font-mono">{crypto}</div>
+                    <div className="text-[10px] text-gray-400 mt-1 font-mono font-semibold">
+                      {num}
+                    </div>
                   </div>
                 );
               })}
@@ -279,99 +254,115 @@ const puzzles = [
     );
   };
 
-  const getUsedLetters = () => {
-    return Object.values(userMap).filter((v, i, arr) => arr.indexOf(v) === i);
-  };
-
-  if (gameState === 'finished') {
+  if (gameState === "menu")
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex items-center justify-center p-4">
-        <div className="text-center max-w-2xl">
-          <Trophy className="w-24 h-24 text-yellow-400 mx-auto mb-4 animate-bounce" />
-          <h1 className="text-5xl font-bold text-white mb-4">VICTORY!</h1>
-          <p className="text-3xl text-green-400 mb-8">Final Score: {score}</p>
+      <div className="h-screen w-full flex items-center justify-center bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 text-white overflow-hidden">
+        <div className="text-center space-y-8 w-full max-w-md px-6">
+          <div>
+            <Sparkles className="w-16 h-16 mx-auto mb-4 text-yellow-400 animate-pulse" />
+            <h1 className="text-6xl font-extrabold mb-2 bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400 bg-clip-text text-transparent">
+              CRYPTOWORD
+            </h1>
+            <p className="text-lg text-gray-300 mt-3">Decode the hidden phrase</p>
+          </div>
+
+          <div className="bg-gray-800/60 rounded-lg p-5 border border-gray-700 shadow-lg">
+            <h3 className="text-xl font-semibold mb-3 text-purple-300">How to Play</h3>
+            <ul className="text-sm text-gray-300 space-y-2 text-left font-mono">
+              <li>🔢 Each letter is replaced with a number</li>
+              <li>💡 Use hints to reveal letters (-50 points)</li>
+              <li>🎯 Decode the phrase before time runs out!</li>
+            </ul>
+          </div>
+
           <button
-            onClick={() => setGameState('menu')}
-            className="px-12 py-4 bg-gradient-to-r from-green-500 to-blue-500 text-white text-xl font-bold rounded-lg hover:from-green-400 hover:to-blue-400 transition-all transform hover:scale-105"
+            onClick={startGame}
+            disabled={loading}
+            className="w-full py-4 bg-gradient-to-r from-purple-600 to-blue-600 rounded-lg text-xl font-bold hover:from-purple-500 hover:to-blue-500 transition-all transform hover:scale-105 shadow-lg disabled:opacity-50"
           >
-            PLAY AGAIN
+            {loading ? "Loading..." : "START GAME"}
           </button>
         </div>
       </div>
     );
-  }
+
+  if (gameState === "finished")
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 text-white p-4">
+        <div className="text-center space-y-6 max-w-md">
+          <Trophy className="w-24 h-24 text-yellow-400 mx-auto animate-bounce" />
+          <h1 className="text-5xl font-bold bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text text-transparent">
+            Game Over
+          </h1>
+          <div className="bg-gray-800/50 rounded-lg p-8 border border-yellow-500/30">
+            <p className="text-5xl font-bold text-yellow-400 mb-1">{score}</p>
+            <p className="text-gray-300 text-lg">Final Score</p>
+          </div>
+          <button
+            onClick={() => setGameState("menu")}
+            className="w-full px-10 py-4 bg-gradient-to-r from-green-600 to-emerald-600 text-white text-xl font-bold rounded-lg hover:from-green-500 hover:to-emerald-500 transform hover:scale-105 transition-all shadow-lg"
+          >
+            Play Again
+          </button>
+        </div>
+      </div>
+    );
+
+  if (!puzzle) return null;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 p-4">
-      <div className="max-w-6xl mx-auto">
-        {/* Header */}
+    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 text-white p-4">
+      <div className="max-w-6xl mx-auto w-full">
         <div className="flex justify-between items-center mb-6">
           <div>
-            <h1 className="text-3xl font-bold text-white">CRYPTOWORD</h1>
-            <p className="text-gray-400">Level {currentPuzzle + 1} / {puzzles.length}</p>
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent mb-2">
+              CRYPTOWORD
+            </h1>
+            <p className="text-sm text-gray-300">Level {level}</p>
           </div>
-          <div className="text-right">
-            <p className="text-2xl font-bold text-yellow-400">Score: {score}</p>
-            <p className="text-sm text-gray-400">Hints Used: {hintsUsed}</p>
-          </div>
-        </div>
-
-        {/* Puzzle Info */}
-        <div className="bg-gray-800 rounded-lg p-4 mb-6 border-2 border-purple-500">
-          <div className="flex justify-between items-center">
-            <div>
-              <p className="text-white font-semibold">Hint: {puzzles[currentPuzzle].hint}</p>
-              <p className="text-gray-400 text-sm">Difficulty: {puzzles[currentPuzzle].difficulty}</p>
+          <div className="flex items-center gap-6">
+            <div className="flex items-center gap-2 text-yellow-400">
+              <Clock className="w-5 h-5" />
+              <span className="text-lg font-bold">{timeLeft}s</span>
             </div>
-            <button
-              onClick={useHint}
-              className="px-4 py-2 bg-blue-500 hover:bg-blue-400 text-white font-bold rounded-lg flex items-center gap-2 transition-all"
-            >
-              <Lightbulb className="w-5 h-5" />
-              Get Hint (-50)
-            </button>
+            <div className="text-right bg-gray-800/50 rounded-lg p-4 border border-gray-700">
+              <p className="text-2xl font-bold text-yellow-400 mb-1">{score}</p>
+              <p className="text-xs text-gray-400">Hints: {hintsUsed}</p>
+            </div>
           </div>
         </div>
 
-        {/* Puzzle */}
-        <div className="bg-gray-800 rounded-lg p-8 mb-6 border-2 border-gray-700">
+        <div className="bg-gradient-to-r from-purple-800/30 to-blue-800/30 rounded-lg p-4 mb-6 border border-purple-500/50 shadow-lg">
+          <div className="flex items-center gap-3">
+            <Lightbulb className="w-5 h-5 text-yellow-400" />
+            <p className="text-sm text-white font-medium">{puzzle.hint}</p>
+          </div>
+        </div>
+
+        <div className="bg-gray-800/70 rounded-lg p-6 border-2 border-gray-700 mb-6 shadow-xl">
           {renderPuzzle()}
-          
-          {/* Navigation Hint */}
-          <div className="flex justify-center gap-4 text-gray-500 text-sm">
-            <span className="flex items-center gap-1">
-              <ArrowLeft className="w-4 h-4" /> / <ArrowRight className="w-4 h-4" /> to navigate
-            </span>
-          </div>
         </div>
 
-        {/* Alphabet Tracker */}
-        <div className="bg-gray-800 rounded-lg p-4 border-2 border-gray-700">
-          <p className="text-white font-semibold mb-2">Letters Used:</p>
-          <div className="flex flex-wrap gap-2">
-            {'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').map(letter => (
-              <div
-                key={letter}
-                className={`w-8 h-8 flex items-center justify-center rounded font-bold text-sm ${
-                  getUsedLetters().includes(letter)
-                    ? 'bg-green-600 text-white'
-                    : 'bg-gray-700 text-gray-500'
-                }`}
-              >
-                {letter}
-              </div>
-            ))}
-          </div>
+        <div className="flex justify-center gap-4">
+          <button
+            onClick={useHint}
+            className="px-6 py-3 bg-blue-600 hover:bg-blue-500 rounded-md flex items-center gap-2 font-bold text-sm transition-all hover:scale-105 shadow-md"
+          >
+            <Lightbulb className="w-4 h-4" /> Hint (-50)
+          </button>
+          <button
+            onClick={checkAnswer}
+            className="px-8 py-3 bg-green-600 hover:bg-green-500 rounded-md flex items-center gap-2 font-bold text-base transition-all hover:scale-105 shadow-md"
+          >
+            Submit
+          </button>
+          <button
+            onClick={generateCryptoMap}
+            className="px-6 py-3 bg-red-600 hover:bg-red-500 rounded-md flex items-center gap-2 font-bold text-sm transition-all hover:scale-105 shadow-md"
+          >
+            <RotateCcw className="w-4 h-4" /> Reset
+          </button>
         </div>
-
-        {/* Reset Button */}
-        <button
-          onClick={generateCryptoMap}
-          className="mt-4 px-6 py-2 bg-red-600 hover:bg-red-500 text-white font-bold rounded-lg flex items-center gap-2 mx-auto transition-all"
-        >
-          <RotateCcw className="w-5 h-5" />
-          Reset Puzzle
-        </button>
       </div>
     </div>
   );
