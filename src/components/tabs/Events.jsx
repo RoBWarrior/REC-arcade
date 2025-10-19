@@ -149,7 +149,7 @@ const Events = () => {
       )}
 
       {/* Event Categories Info */}
-      <div className="mt-16 max-w-4xl mx-auto">
+      {/* <div className="mt-16 max-w-4xl mx-auto">
         <h3 className="text-2xl font-bold text-center mb-8">Event Types</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="bg-gradient-to-br from-purple-900 to-purple-800 p-4 rounded-lg border border-purple-500/30">
@@ -173,7 +173,7 @@ const Events = () => {
             <p className="text-sm text-gray-300">Club updates and discussions</p>
           </div>
         </div>
-      </div>
+      </div> */}
     </div>
   );
 };
